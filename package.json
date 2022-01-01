@@ -1,0 +1,22 @@
+{
+  "name": "perl-it-online",
+  "version": "0.0.1",
+  "description": "Perl - in browser (WebPerl)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dom111/perl-it-online.git"
+  },
+  "author": "",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/dom111/perl-it-online/issues"
+  },
+  "homepage": "https://github.com/dom111/perl-it-online#readme",
+  "dependencies": {
+    "xterm": "^4.16.0"
+  }
+}

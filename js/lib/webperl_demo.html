@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>WebPerl &lt;script&gt; Demos</title>
+
+<script src="webperl.js"></script>
+
+<!-- Please see the documentation at http://webperl.zero-g.net/using.html -->
+
+<!-- Example 1: A really basic script -->
+<script type="text/perl">
+print "Hello, Perl World!\n";
+</script>
+
+<!-- Example 2: Accessing JavaScript -->
+<script type="text/perl">
+use warnings;
+use strict;
+use WebPerl qw/js/;
+
+js('document')->getElementById('my_button')
+	->addEventListener("click", sub {
+		print "You clicked 'Testing!'\n";
+	} );
+
+</script>
+
+<!-- Example 3: Using jQuery -->
+<!--cacheable--><script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script type="text/perl">
+use warnings;
+use strict;
+use WebPerl qw/js/;
+
+my $jq = js('jQuery');
+my $btn = $jq->('<button>', { text=>"Click me!" } );
+$btn->click(sub {
+	print "You clicked the jQuery button!\n";
+} );
+$btn->appendTo( $jq->('#buttons') );
+
+# And a demo of AJAX using jQuery:
+use Cpanel::JSON::XS qw/encode_json/;
+use Data::Dumper;
+my $data_out = { hello => "Hello, World!\n" };
+$jq->ajax( '/ajaxtest', {
+	method => 'POST', # we're sending JSON in the POST body
+	data => encode_json($data_out),
+} )->done( sub {
+	my $data_in = shift;
+	print "AJAX Success! Data: ", Dumper($data_in->toperl);
+} )->fail( sub {
+	my ($jqXHR, $textStatus, $errorThrown) = @_;
+	print "AJAX Failed! ($errorThrown)\n";
+} );
+
+</script>
+
+<!-- Optional STDOUT/STDERR text area (if you don't use this, output goes to Javascript console) -->
+<script>
+window.addEventListener("load", function () {
+	document.getElementById('output')
+		.appendChild( Perl.makeOutputTextarea() );
+});
+</script>
+
+</head>
+<body>
+
+<p>This is a demo of <a href="http://webperl.zero-g.net" target="_blank">WebPerl</a>!</p>
+
+<div id="output"></div>
+<div id="buttons">
+	<button id="my_button">Testing!</button>
+</div>
+
+</body>
+</html>
