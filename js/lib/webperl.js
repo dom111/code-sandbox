@@ -331,7 +331,7 @@ Perl.eval = function (code) {
 		throw "Perl: can't call eval in state "+Perl.state;
 	if (Perl.trace) console.debug('Perl: ccall webperl_eval_perl',code);
 	try {
-		return ccall("webperl_eval_perl","string",["string"],[code]);
+		return ccall("webperl_eval_perl","string",["array"],[[...code]]);
 	}
 	catch (e) {
 		if (e instanceof ExitStatus) {

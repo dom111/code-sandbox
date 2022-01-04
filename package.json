@@ -2,9 +2,13 @@
   "name": "perl-it-online",
   "version": "0.0.1",
   "description": "Perl - in browser (WebPerl)",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "npm run prettier:format && npm run build:esbuild",
+    "build:watch": "npm run prettier:format && npm run build:esbuild:watch",
+    "build:esbuild": "node esbuild.js prod",
+    "build:esbuild:watch": "node esbuild.js dev watch",
+    "prettier:check": "prettier --config .prettierrc 'js/*' esbuild.js",
+    "prettier:format": "prettier --config .prettierrc 'js/*' esbuild.js --write"
   },
   "repository": {
     "type": "git",
@@ -18,6 +22,10 @@
   "homepage": "https://github.com/dom111/perl-it-online#readme",
   "dependencies": {
     "codemirror": "^5.65.0",
-    "xterm": "^4.16.0"
+    "esbuild": "^0.14.10",
+    "esbuild-sass-plugin": "^2.0.0",
+    "prettier": "^2.5.1",
+    "xterm": "^4.16.0",
+    "xterm-addon-fit": "^0.5.0"
   }
 }

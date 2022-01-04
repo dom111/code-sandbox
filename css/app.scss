@@ -1,0 +1,19 @@
+body {
+    background: #272822;
+    color: #d0d0d0;
+    margin: 0;
+    padding: 0;
+}
+
+[name="code"],
+[name="input"] {
+    width: 100vw;
+}
+
+.CodeMirror pre.CodeMirror-placeholder {
+    opacity: 0.5;
+}
+
+@import '../node_modules/xterm/css/xterm.css';
+@import '../node_modules/codemirror/lib/codemirror.css';
+@import '../node_modules/codemirror/theme/monokai.css';
