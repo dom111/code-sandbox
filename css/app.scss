@@ -1,17 +1,37 @@
 body {
     background: #272822;
-    color: #d0d0d0;
+    color: #f8f8f2;
+    font-family: sans-serif;
     margin: 0;
-    padding: 0;
+    padding: 1em;
 }
 
-[name="code"],
-[name="input"] {
-    width: 100vw;
+h2 {
+    display: flex;
+
+    > * {
+        margin-left: 0.5em;
+    }
 }
 
-.CodeMirror pre.CodeMirror-placeholder {
-    opacity: 0.5;
+.CodeMirror {
+    border: 1px solid #f8f8f2;
+    height: auto;
+
+    pre.CodeMirror-placeholder {
+        opacity: 0.5;
+    }
+
+    .CodeMirror-scroll {
+        height: auto;
+    }
+}
+
+.stdout,
+.stderr {
+    .xterm-screen {
+        border: 1px solid #f8f8f2;
+    }
 }
 
 @import '../node_modules/xterm/css/xterm.css';
