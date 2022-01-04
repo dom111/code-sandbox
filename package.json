@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/dom111/perl-it-online#readme",
   "dependencies": {
+    "codemirror": "^5.65.0",
     "xterm": "^4.16.0"
   }
 }

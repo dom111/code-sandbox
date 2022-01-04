@@ -1,8 +1,13 @@
+<link rel="stylesheet" href="css/app.css" />
 <link rel="stylesheet" href="node_modules/xterm/css/xterm.css" />
+<link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css" />
+<link rel="stylesheet" href="node_modules/codemirror/addon/search/matchesonscrollbar.css" />
+<link rel="stylesheet" href="node_modules/codemirror/theme/monokai.css" />
 
-<textarea name="code" placeholder="Code...">print"Hello, World!"</textarea>
-<textarea name="args" placeholder="Arguments..."></textarea>
-<textarea name="input" placeholder="STDIN"></textarea>
+<textarea name="code" placeholder="Code...">$_="$.: $_ (@F)";</textarea>
+<textarea name="args" placeholder="Arguments...">-plF</textarea>
+<textarea name="input" placeholder="STDIN">abc
+def</textarea>
 
 <input type="button" name="run" value="Run">
 <input type="button" name="stop" value="Stop" disabled>
@@ -13,4 +18,10 @@
 <pre class="error"></pre>
 
 <script src="node_modules/xterm/lib/xterm.js"></script>
+<script src="node_modules/codemirror/lib/codemirror.js"></script>
+<script src="node_modules/codemirror/mode/perl/perl.js"></script>
+<script src="node_modules/codemirror/addon/search/matchesonscrollbar.js"></script>
+<script src="node_modules/codemirror/addon/search/match-highlighter.js"></script>
+<script src="node_modules/codemirror/addon/edit/closebrackets.js"></script>
+<script src="node_modules/codemirror/addon/edit/matchbrackets.js"></script>
 <script src="js/app.js"></script>
