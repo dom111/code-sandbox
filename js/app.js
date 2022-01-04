@@ -15,6 +15,34 @@ const code = document.querySelector('textarea[name="code"]'),
 
 term.open(document.querySelector('div.terminal'));
 
+const editor = CodeMirror.fromTextArea(code, {
+    autoCloseBrackets: true,
+    autofocus: true,
+    lineNumbers: true,
+    matchBrackets: true,
+    matchHighlighter: true,
+    theme: 'monokai',
+});
+
+editor.refresh();
+
+editor.on('change', () => {
+    const currentMode = editor.getOption('mode');
+
+    if (editor.getValue().match(/^00000000: /)) {
+        if (currentMode !== null) {
+            editor.setOption('mode', null);
+        }
+
+        return;
+    }
+
+    // TODO: match against language dropdown if there are more languages available
+    if (currentMode !== 'perl') {
+        editor.setOption('mode', 'perl');
+    }
+})
+
 run.addEventListener('click', () => {
     const started = Date.now(),
         stopHandler = () => {
@@ -38,7 +66,7 @@ run.addEventListener('click', () => {
 
     const worker = new Worker('./js/worker.js');
 
-    let codeToRun = code.value;
+    let codeToRun = editor.getValue();
 
     if (codeToRun.match(/^0{7}: /)) {
         codeToRun = codeToRun

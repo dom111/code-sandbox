@@ -186,7 +186,9 @@ Perl.Util.baseurl = function (urlstr) {
 		return url.origin + url.pathname.substring(0, url.pathname.lastIndexOf('/'));
 };
 
-Perl.init = function (readyCallback, input) {
+Perl.stdin_buf = '';
+
+Perl.init = function (readyCallback) {
 	if (Perl.state != "Uninitialized")
 		throw "Perl: can't call init in state "+Perl.state;
 	Perl.changeState("Initializing");
@@ -204,21 +206,15 @@ Perl.init = function (readyCallback, input) {
 		stdout: Perl.outputChar.bind(null,1),  stderr:   Perl.outputChar.bind(null,2),
 		// Fudge to make sure there is a newline at the end
 		stdin: function () {
-			if (! input) {
+			if (! Perl.stdin_buf) {
 				return null;
 			}
 
-			if (stdinPos < input.length) {
-				const nextNewline = input.indexOf('\n', stdinPos) + 1,
-					data = input.substr(stdinPos, (nextNewline || input.length) - stdinPos);
-
-				stdinPos = nextNewline || input.length;
-
-				return data;
+			if (stdinPos < Perl.stdin_buf.length) {
+				return Perl.stdin_buf.charCodeAt(stdinPos++);
 			}
 
 			return null;
-			// return (input ?? '') + input.match(/\n$/) ? '' : '\n';
 		},
 		arguments: ['--version'],
 		onAbort: function () {
