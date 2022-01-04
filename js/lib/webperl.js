@@ -52,86 +52,6 @@ var Perl = {
 	},
 };
 
-/* TODO: Embedded script should be able to influence the running of Perl,
- * the cleanest would probably be to set properties on the Perl object,
- * such as Perl.autorun = false or Perl.argv = [...]. It should be possible
- * for the user to do this for embedded scripts also! Will probably need
- * to change the initialization of Perl so that the user can set its properties
- * *before* loading webperl.js. */
-
-// window.addEventListener("load", function () {
-// 	// Note: to get the content of script tags with jQuery: $('script[type="text/perl"]').html()
-// 	var scripts = [];
-// 	var script_src;
-// 	document.querySelectorAll("script[type='text/perl']")
-// 		.forEach(function (el) {
-// 			if (el.src) {
-// 				if (script_src || scripts.length)
-// 					console.error('Only a single Perl script may be loaded via "script src=", ignoring others');
-// 				else
-// 					script_src = el.src;
-// 			}
-// 			else {
-// 				if (script_src)
-// 					console.error('Only a single Perl script may be loaded via "script src=", ignoring others');
-// 				else
-// 					scripts.push(el.innerHTML);
-// 			}
-// 		});
-// 	if (script_src) {
-// 		console.debug("Perl: Found a script with src, fetching and running...", script_src);
-// 		var xhr = new XMLHttpRequest();
-// 		xhr.addEventListener("load", function () {
-// 			//TODO Later: Might be nice to name the script in the virtual FS after the URL instead of a generic name
-// 			Perl._saveAndRun( this.responseText );
-// 		});
-// 		xhr.open("GET", script_src);
-// 		xhr.send();
-// 	}
-// 	else if (scripts.length) {
-// 		console.debug("Perl: Found",scripts.length,"embedded script(s), autorunning...");
-// 		var code = scripts.join(";\n");
-//
-// 		// get the first five lines of code
-// 		var n = 5 + 1; // the contents of the <script> tag will usually begin with a newline
-// 		var i = -1;
-// 		while (n-- && i++ < code.length) {
-// 			i = code.indexOf("\n", i);
-// 			if (i < 0) break;
-// 		}
-// 		var head = i<0 ? code : code.substring(0,i);
-// 		// look for a "use WebPerl"
-// 		const regex = /^\s*use\s+WebPerl(\s|;)/m;
-// 		if (!regex.exec(head)) { // load WebPerl unless the user loaded it
-// 			console.debug("Perl: Autoloading WebPerl");
-// 			code = "use WebPerl 'js';\n" + code;
-// 		}
-//
-// 		Perl._saveAndRun(code);
-// 	}
-// 	else console.debug("Perl: No embedded scripts");
-// });
-Perl._saveAndRun = function (script) {
-	Perl.init(function () {
-		var file = "/tmp/scripts.pl";
-		try {
-			FS.writeFile( file, script );
-			console.debug("Perl: Saved script(s) to ",file,", now running");
-			// window.addEventListener("beforeunload", function () {
-			// 	// not really needed because we're unloading anyway, but for good measure, end Perl...
-			// 	console.debug("Perl: beforeunload, ending...");
-			// 	Perl.end();
-			// });
-			// run Perl async so that the window has a chance to refresh
-			setTimeout(function () { Perl.start( [ file ] ); }, 1);
-		}
-		catch (err) {
-			console.error("Perl:",err);
-			// alert("Save to "+file+" failed: "+err);
-		}
-	});
-};
-
 Perl.changeState = function (newState) {
 	if (Perl.state==newState) return;
 	var oldState = Perl.state;
@@ -143,25 +63,15 @@ Perl.changeState = function (newState) {
 	for( var i=0 ; i<Perl.stateChangeListeners.length ; i++ )
 		Perl.stateChangeListeners[i](oldState,newState);
 };
+
 Perl.stateChangeListeners = [ function (from,to) {
 	console.debug("Perl: state changed from "+from+" to "+to);
 } ];
+
 Perl.addStateChangeListener = function (handler) {
 	Perl.stateChangeListeners.push(handler);
 };
 
-// chan: 1=STDOUT, 2=STDERR
-// implementations are free to ignore the "chan" argument if they want to merge the two streams
-Perl.output = function (str,chan) { // can be overridden by the user
-	var buf = chan==2 ? 'stderr_buf' : 'stdout_buf';
-	Perl[buf] += str;
-	var pos = Perl[buf].indexOf("\n");
-	while (pos>-1) {
-		console.log( chan==2?"STDERR":"STDOUT", Perl[buf].slice(0,pos) );
-		Perl[buf] = Perl[buf].slice(pos+1);
-		pos = Perl[buf].indexOf("\n");
-	}
-};
 Perl.outputLine = function (chan,text) { // internal function
 	if (arguments.length > 2) text = Array.prototype.slice.call(arguments,1).join(' ');
 	Perl.output(text,chan);
@@ -169,21 +79,6 @@ Perl.outputLine = function (chan,text) { // internal function
 };
 Perl.outputChar = function (chan,c) { // internal function
 	Perl.output(String.fromCharCode(c),chan);
-};
-
-var getScriptURL = (function() { // with thanks to https://stackoverflow.com/a/2976714
-	// var scripts = document.getElementsByTagName('script');
-	// var index = scripts.length - 1;
-	// var myScript = scripts[index];
-	return function() { return './'; };
-})();
-
-Perl.Util.baseurl = function (urlstr) {
-	var url = new URL(urlstr);
-	if (url.protocol=='file:')
-		return url.href.substring(0, url.href.lastIndexOf('/'));
-	else
-		return url.origin + url.pathname.substring(0, url.pathname.lastIndexOf('/'));
 };
 
 Perl.stdin_buf = '';
@@ -194,7 +89,6 @@ Perl.init = function (readyCallback) {
 	Perl.changeState("Initializing");
 	// Note that a lot of things still won't work for file:// URLs because of the Same-Origin Policy.
 	// see e.g. https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors/CORSRequestNotHttp
-	// var baseurl = Perl.Util.baseurl(getScriptURL());
 	Perl.readyCallback = readyCallback;
 
 	let stdinPos = 0;
@@ -259,12 +153,6 @@ Perl.init = function (readyCallback) {
 				});
 			}
 		],
-		// locateFile: function (file) {
-		// 	var wasmRe = /\.(wast|wasm|asm\.js|data)$/;
-		// 	if (wasmRe.exec(file))
-		// 		return baseurl+"/"+file;
-		// 	return file;
-		// },
 	};
 	if (Perl.endAfterMain) {
 		Module.preRun.push(function () {
@@ -279,10 +167,6 @@ Perl.init = function (readyCallback) {
 	}
 	console.debug("Perl: Fetching Emscripten/Perl...");
 	importScripts('./lib/emperl.js');
-	// var script = document.createElement('script');
-	// script.async = true; script.defer = true;
-	// script.src = baseurl+"/emperl.js";
-	// document.getElementsByTagName('head')[0].appendChild(script);
 };
 
 Perl.initStepFinished = function () {
@@ -310,37 +194,30 @@ Perl.initStepFinished = function () {
 	Perl.readyCallback = null;
 };
 
-Perl.start = function (argv) {
-	if (Perl.state!="Ready")
-		throw "Perl: can't call start in state "+Perl.state;
-	Perl.changeState("Running");
-	try {
-		// Note: currently callMain doesn't seem to throw ExitStatus exceptions, see discussion in Perl.initStepFinished
-		Module.callMain(argv ? argv : Module.arguments);
+Perl.run = function(code, args) {
+	if (!FS.isDir('/tmp')) {
+		FS.createPath('/', 'tmp', true, true);
 	}
-	catch (e) {
-		if (e instanceof ExitStatus) {
-			console.debug("Perl: start:",e);
-			Module.onExit(e.status);
-		} else throw e;
-	}
-};
 
-Perl.eval = function (code) {
-	if (Perl.state!="Running")
-		throw "Perl: can't call eval in state "+Perl.state;
-	if (Perl.trace) console.debug('Perl: ccall webperl_eval_perl',code);
+	if (FS.isFile('/tmp/script.pl')) {
+		FS.rmdir('/tmp/script.pl');
+		// FS.unlink('/tmp/script.pl');
+	}
+
+	FS.createFile('/tmp', 'script.pl', {}, true, true);
+	FS.writeFile('/tmp/script.pl', Int32Array.from(code));
+
+	Perl.changeState("Running");
+
 	try {
-		return ccall("webperl_eval_perl","string",["array"],[[...code]]);
+		return Module.callMain([...args, '/tmp/script.pl']);
 	}
 	catch (e) {
-		if (e instanceof ExitStatus) {
-			// the code caused perl to (try to) exit - now we need to call
-			// Perl's global destruction via our emperl_end_perl() function
-			Perl.end(); //TODO: Perl.end has already been called at this point (how?)
-		} else throw e;
+		Perl.end();
+
+		Perl.output(e.message, 2);
 	}
-};
+}
 
 /* Note that Emscripten apparently doesn't support re-running the program once it exits (?).
  * So at the moment, once we end Perl, that's it. The only useful effect of ending Perl is
@@ -397,8 +274,4 @@ Perl.unglue = function (id) {
 	if (Perl.trace) console.debug('Perl: Unglue id',id,'from',Perl.GlueTable[id]);
 	delete Perl.GlueTable[id];
 	Perl._glue_free_ids[id]=1;
-}
-
-Perl.input = function() {
-
 }

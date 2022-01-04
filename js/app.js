@@ -19,19 +19,20 @@ const code = document.querySelector('textarea[name="code"]'),
   languageSelector = document.querySelector('select[name="lang"]'),
   fit = new FitAddon(),
   stdout = new Terminal({
-    rendererType: 'dom',
+    convertEol: true,
     theme: {
       background: '#272822',
+      cursor: 'transparent',
       foreground: '#d0d0d0',
     },
-    convertEol: true,
   }),
   stderr = new Terminal({
+    convertEol: true,
     theme: {
       background: '#272822',
+      cursor: 'transparent',
       foreground: '#f92672',
     },
-    convertEol: true,
   }),
   clearStdout = () => stdout.reset(),
   clearStderr = () => stderr.reset(),
@@ -48,15 +49,53 @@ const code = document.querySelector('textarea[name="code"]'),
   codeEditor = CodeMirror.fromTextArea(code, {
     autoCloseBrackets: true,
     autofocus: true,
-    lineNumbers: true,
+    // lineNumbers: true,
     matchBrackets: true,
     matchHighlighter: true,
+    mode: null,
     theme: 'monokai',
+    viewportMargin: Infinity,
+  }),
+  argsEditor = CodeMirror.fromTextArea(args, {
+    mode: null,
+    theme: 'monokai',
+    viewportMargin: Infinity,
   }),
   inputEditor = CodeMirror.fromTextArea(input, {
     mode: null,
     theme: 'monokai',
-  });
+    viewportMargin: Infinity,
+  }),
+  codeOnChange = () => {
+    const currentMode = codeEditor.getOption('mode'),
+      code = codeEditor.getValue();
+
+    bytes.removeAttribute('hidden');
+
+    // It's an `xxd` dump
+    if (isXxd(code)) {
+      if (currentMode !== null) {
+        codeEditor.setOption('mode', null);
+      }
+
+      xxdDump.removeAttribute('hidden');
+
+      const realCode = xxdR(code);
+
+      bytesCount.innerText = realCode.length;
+
+      return;
+    }
+
+    xxdDump.setAttribute('hidden', '');
+
+    bytesCount.innerText = code.length;
+
+    // TODO: match against language dropdown if there are more languages available
+    if (currentMode !== languageSelector.value) {
+      codeEditor.setOption('mode', languageSelector.value);
+    }
+  };
 
 // outputs
 stdout.loadAddon(fit);
@@ -67,40 +106,8 @@ stderr.open(document.querySelector('div.stderr'));
 resizeOutputs();
 window.addEventListener('resize', () => resizeOutputs());
 
-// inputs
-codeEditor.setSize('100%', 200);
-inputEditor.setSize('100%', 100);
-
-codeEditor.on('change', () => {
-  const currentMode = codeEditor.getOption('mode'),
-    code = codeEditor.getValue();
-
-  bytes.removeAttribute('hidden');
-
-  // It's an `xxd` dump
-  if (isXxd(code)) {
-    if (currentMode !== null) {
-      codeEditor.setOption('mode', null);
-    }
-
-    xxdDump.removeAttribute('hidden');
-
-    const realCode = xxdR(code);
-
-    bytesCount.innerText = realCode.length;
-
-    return;
-  }
-
-  xxdDump.setAttribute('hidden', '');
-
-  bytesCount.innerText = code.length;
-
-  // TODO: match against language dropdown if there are more languages available
-  if (currentMode !== languageSelector.value) {
-    codeEditor.setOption('mode', languageSelector.value);
-  }
-});
+codeOnChange();
+codeEditor.on('change', () => codeOnChange());
 
 run.addEventListener('click', () => {
   const started = Date.now(),
@@ -132,7 +139,7 @@ run.addEventListener('click', () => {
   worker.postMessage({
     type: 'run',
     code: codeToRun,
-    args: args.value,
+    args: argsEditor.getValue(),
     input: inputEditor.getValue(),
   });
 
