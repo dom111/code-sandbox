@@ -1,0 +1,18 @@
+# TODO
+
+- [X] Get the basics working
+- [X] Support `xxd` dumps
+- [X] Fix STDIN
+- [X] Get commandline flags working again
+- [X] Using `location.hash`, store current state and create sharable URL
+- [X] Add CGCC snippet (including flags!)
+- [ ] Check a bunch of existing answers and fix what's broken
+- [ ] Verify `LICENSE`s before adding one here
+- [ ] Clean up the used `webperl` implementation (to make updating easier)
+- [ ] Add different versions of Perl (older versions supporting `?..?` in `s///`, literal `$^V`, etc)
+- [ ] Add PHP (https://github.com/oraoto/pib)
+- [ ] Add Ruby (https://runrb.io/)
+- [ ] Add Python (https://pyodide.org/)
+- [ ] Add C#? (https://blazor.net/)
+- [ ] Maybe add bash via jslinux somehow? (https://bellard.org/jslinux/)
+- [ ] Accessibility (aria-label of all fields etc)

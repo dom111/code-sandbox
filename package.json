@@ -7,8 +7,8 @@
     "build:watch": "npm run prettier:format && npm run build:esbuild:watch",
     "build:esbuild": "node esbuild.js prod",
     "build:esbuild:watch": "node esbuild.js dev watch",
-    "prettier:check": "prettier --config .prettierrc 'js/*' esbuild.js",
-    "prettier:format": "prettier --config .prettierrc 'js/*' esbuild.js --write"
+    "prettier:check": "prettier --config .prettierrc 'js/**/*.ts' 'js/langs/**/*.js' esbuild.js",
+    "prettier:format": "prettier --config .prettierrc 'js/**/*.ts' esbuild.js --write"
   },
   "repository": {
     "type": "git",
@@ -21,6 +21,8 @@
   },
   "homepage": "https://github.com/dom111/perl-it-online#readme",
   "dependencies": {
+    "@gfx/zopfli": "^1.0.15",
+    "@types/codemirror": "^5.60.5",
     "codemirror": "^5.65.0",
     "esbuild": "^0.14.10",
     "esbuild-sass-plugin": "^2.0.0",
