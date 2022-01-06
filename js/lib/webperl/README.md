@@ -1,6 +1,4 @@
-
-WebPerl
-=======
+# WebPerl
 
 Welcome to WebPerl!
 Please see the documentation on the main site:
@@ -16,12 +14,10 @@ As well as the
 You can also check out all of the documentation into subdirectories
 of this project, for example:
 
-	$ git clone --branch gh-pages https://github.com/haukex/webperl.git pages
-	$ git clone https://github.com/haukex/webperl.wiki.git wiki
+    $ git clone --branch gh-pages https://github.com/haukex/webperl.git pages
+    $ git clone https://github.com/haukex/webperl.wiki.git wiki
 
-
-Author, Copyright, and License
-==============================
+# Author, Copyright, and License
 
 **WebPerl - <http://webperl.zero-g.net>**
 
@@ -42,4 +38,3 @@ See the licenses for details.
 
 You should have received a copy of the licenses along with this program.
 If not, see <http://perldoc.perl.org/index-licence.html>.
-

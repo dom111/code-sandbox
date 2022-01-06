@@ -1,7 +1,7 @@
 const esbuild = require('esbuild'),
   { sassPlugin } = require('esbuild-sass-plugin'),
   buildOptions = {
-    entryPoints: ['js/app.js', 'css/app.scss', 'js/worker.js'],
+    entryPoints: ['js/app.ts', 'css/app.scss', 'js/langs/perl/worker.js'],
     bundle: true,
     minify: true,
     sourcemap: true,

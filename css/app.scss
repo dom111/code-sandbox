@@ -15,7 +15,9 @@ h2 {
 }
 
 .CodeMirror {
-    border: 1px solid #f8f8f2;
+    border: 1px solid rgba(248, 248, 242, .3);
+    font-family: courier-new, courier, monospace;
+    font-size: 15px;
     height: auto;
 
     pre.CodeMirror-placeholder {
@@ -25,12 +27,18 @@ h2 {
     .CodeMirror-scroll {
         height: auto;
     }
+
+    &:focus-within {
+        border-color: #a6e22e;
+    }
 }
 
-.stdout,
-.stderr {
-    .xterm-screen {
-        border: 1px solid #f8f8f2;
+.terminal {
+    border: 1px solid rgba(248, 248, 242, .3);
+    padding: 4px;
+
+    &:focus-within {
+        border-color: #a6e22e;
     }
 }
 
