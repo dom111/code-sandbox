@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../js/langs/webperl-5.28.1/worker.js"],
+  "sourcesContent": ["importScripts('../../../../js/lib/webperl-5.28.1/webperl.js');\n\naddEventListener('message', ({ data }) => {\n  // TODO: check 'type' param too...\n  const { code, args, input } = data;\n\n  Perl.output = (content, channel) => {\n    if (channel === 2) {\n      postMessage({\n        type: 'output',\n        error: content,\n      });\n\n      return;\n    }\n\n    postMessage({\n      type: 'output',\n      output: content,\n    });\n  };\n\n  Perl.endAfterMain = true;\n\n  Perl.addStateChangeListener((from, to) => {\n    if (to === 'Ended') {\n      postMessage({\n        type: 'done',\n      });\n    }\n  });\n\n  Perl.init(() => {\n    Perl.stdin_buf += input;\n\n    Perl.run(code, args.trim() ? args.trim().split(/\\n/) : []);\n  });\n});\n"],
+  "mappings": "MAAA,cAAc,gDAEd,iBAAiB,UAAW,CAAC,CAAE,UAAW,CAExC,GAAM,CAAE,OAAM,OAAM,SAAU,EAE9B,KAAK,OAAS,CAAC,EAAS,IAAY,CAClC,GAAI,IAAY,EAAG,CACjB,YAAY,CACV,KAAM,SACN,MAAO,IAGT,OAGF,YAAY,CACV,KAAM,SACN,OAAQ,KAIZ,KAAK,aAAe,GAEpB,KAAK,uBAAuB,CAAC,EAAM,IAAO,CACxC,AAAI,IAAO,SACT,YAAY,CACV,KAAM,WAKZ,KAAK,KAAK,IAAM,CACd,KAAK,WAAa,EAElB,KAAK,IAAI,EAAM,EAAK,OAAS,EAAK,OAAO,MAAM,MAAQ",
+  "names": []
+}

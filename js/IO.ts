@@ -1,117 +1,27 @@
-import { ITerminalOptions, Terminal } from 'xterm';
-import { Editor, EditorConfiguration, fromTextArea } from 'codemirror';
-import { isXxd, xxdR } from './xxdR';
-import { FitAddon } from 'xterm-addon-fit/src/FitAddon';
-import 'codemirror/addon/display/placeholder';
-import 'codemirror/addon/edit/closebrackets';
-import 'codemirror/addon/edit/matchbrackets';
-import { getLangs, getName } from './langs';
+import { Editor } from 'codemirror';
+import { Terminal } from 'xterm';
+import { decoders } from './Decoders';
 
 export class IO {
-  private languageSelector: HTMLSelectElement;
-  private stdout: Terminal;
-  private stderr: Terminal;
-  private fit: FitAddon;
-  private stdin: Editor;
-  private args: Editor;
-  private code: Editor;
-
   constructor(
-    languageSelectorElement: HTMLSelectElement,
-    codeElement: HTMLTextAreaElement,
-    stdinElement: HTMLTextAreaElement,
-    stdoutElement: HTMLElement,
-    stderrElement: HTMLElement,
-    argsElement: HTMLTextAreaElement
-  ) {
-    this.languageSelector = languageSelectorElement;
-
-    this.addRegisteredLangs();
-
-    this.stdout = IO.createTerminal();
-
-    this.stderr = IO.createTerminal({
-      theme: {
-        foreground: '#f92672',
-      },
-    });
-
-    this.fit = new FitAddon();
-
-    this.stdout.loadAddon(this.fit);
-    this.stdout.open(stdoutElement);
-    this.stderr.open(stderrElement);
-
-    this.code = IO.createEditor(codeElement, {
-      autoCloseBrackets: true,
-      autofocus: true,
-      matchBrackets: true,
-    });
-    this.stdin = IO.createEditor(stdinElement);
-    this.args = IO.createEditor(argsElement);
-  }
-
-  private addRegisteredLangs(): void {
-    getLangs().forEach((lang) => {
-      const option = document.createElement('option');
-
-      option.setAttribute('value', lang);
-      option.append(document.createTextNode(getName(lang)));
-
-      this.languageSelector.append(option);
-    });
-  }
-
-  public setLang(lang: string): void {
-    const availableLangs = getLangs();
-
-    if (!availableLangs.includes(lang)) {
-      throw new TypeError(`Unknown lang: ${lang}.`);
-    }
-
-    this.languageSelector.value = lang;
-
-    this.setCodeHighlight(lang);
-  }
-
-  public getLang(): string {
-    return this.languageSelector.value;
-  }
-
-  private static createTerminal(options: ITerminalOptions = {}): Terminal {
-    return new Terminal({
-      ...options,
-      theme: {
-        background: '#272822',
-        cursor: 'transparent',
-        foreground: '#f8f8f2',
-        ...(options.theme ?? {}),
-      },
-    });
-  }
-
-  private static createEditor(
-    element: HTMLTextAreaElement,
-    options: EditorConfiguration = {}
-  ): Editor {
-    return fromTextArea(element, {
-      mode: null,
-      theme: 'monokai',
-      viewportMargin: Infinity,
-      extraKeys: {
-        'Shift-Tab': false,
-        Tab: false,
-      },
-      ...options,
-    });
-  }
+    private languageSelector: HTMLSelectElement,
+    private header: Editor,
+    private code: Editor,
+    private footer: Editor,
+    private stdin: Editor,
+    private stdout: Terminal,
+    private stderr: Terminal,
+    private args: Editor
+  ) {}
 
   public writeStdout(text: string): void {
-    this.stdout.write(text);
+    // patch for xterm.js - this allows VT and FF but patches \n, vs. convertEol option
+    this.stdout.write(text.replace(/(?<!\r)\n/g, '\r\n'));
   }
 
   public writeStderr(text: string): void {
-    this.stderr.write(text);
+    // patch for xterm.js - this allows VT and FF but patches \n, vs. convertEol option
+    this.stderr.write(text.replace(/(?<!\r)\n/g, '\r\n'));
   }
 
   public clearStdout(): void {
@@ -122,34 +32,43 @@ export class IO {
     this.stderr.reset();
   }
 
-  public resize(): void {
-    this.fit.fit();
-    this.stderr.resize(this.stdout.cols, 6);
+  public static getRaw(field: Editor): string {
+    return field.getValue();
   }
 
-  public codeIsXxd(): boolean {
-    return isXxd(this.code.getValue());
+  private static getAsArray(field: Editor): number[] {
+    const code = IO.getRaw(field),
+      decoder = decoders.decoder(code);
+
+    return decoder.decode(code);
+  }
+
+  public getRawCodeHeader(): string {
+    return IO.getRaw(this.header);
+  }
+
+  public getCodeHeaderAsArray(): number[] {
+    return IO.getAsArray(this.header);
+  }
+
+  public setCodeHeader(code: string): void {
+    this.header.setValue(code);
   }
 
   public getRawCode(): string {
-    return this.code.getValue();
+    return IO.getRaw(this.code);
   }
 
   public getCodeAsArray(): number[] {
-    const code = this.getRawCode();
-
-    if (isXxd(code)) {
-      return xxdR(code);
-    }
-
-    return Array.from(code).map((c: string): number => c.charCodeAt(0));
+    return IO.getAsArray(this.code);
   }
 
   public getCodeAsString(replaceBinaryBytes: string | null = '.'): string {
-    let code = this.getRawCode();
+    let code = this.getRawCode(),
+      decoder = decoders.decoder(code);
 
-    if (isXxd(code)) {
-      code = String.fromCharCode(...xxdR(code));
+    if (decoder.name() !== 'default') {
+      code = String.fromCharCode(...decoder.decode(code));
     }
 
     if (replaceBinaryBytes !== null) {
@@ -159,20 +78,32 @@ export class IO {
     return code;
   }
 
+  public getFullCodeAsArray(): number[] {
+    return [
+      ...this.getCodeHeaderAsArray(),
+      ...this.getCodeAsArray(),
+      ...this.getCodeFooterAsArray(),
+    ];
+  }
+
   public setCode(value: string): void {
     this.code.setValue(value);
   }
 
-  public setCodeHighlight(lang: string): void {
-    if (this.code.getOption('mode') === lang) {
-      return;
-    }
-
-    this.code.setOption('mode', lang);
-  }
-
   public onCodeChange(handler: Function): void {
     this.code.on('change', (): void => handler());
+  }
+
+  public getRawCodeFooter(): string {
+    return IO.getRaw(this.footer);
+  }
+
+  public getCodeFooterAsArray(): number[] {
+    return IO.getAsArray(this.footer);
+  }
+
+  public setCodeFooter(code: string): void {
+    this.footer.setValue(code);
   }
 
   public getArgs(): string {
@@ -181,6 +112,10 @@ export class IO {
 
   public setArgs(value: string): void {
     this.args.setValue(value);
+  }
+
+  public argsRefresh(): void {
+    this.args.refresh();
   }
 
   public getStdin(): string {

@@ -1,36 +1,60 @@
-<link rel="stylesheet" href="dist/app.css" />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="dist/css/app.css" />
 
-<h1>Code Sandbox</h1>
+    <title>Code Sandbox</title>
+</head>
+<body>
+    <h1>
+        Code Sandbox
+        <select name="lang" aria-label="Select target language"></select>
+        <span class="encoded" hidden>(<code class="format"></code>)</span>
+        <span class="bytes"><span class="byte-count">0</span> byte<span class="plural">s</span></span>
 
-<h2>
-    Code
-    <select name="lang" aria-label="Select target language"></select>
-    <span class="xxd-dump" hidden>(<code>xxd</code>)</span>
-    <span class="bytes"><span class="byte-count">0</span> byte<span class="plural">s</span></span>
+        <input type="button" name="run" value="Run">
+        <input type="button" name="stop" value="Stop" disabled>
+        <input type="button" name="copy" value="Copy link">
+        <input type="button" name="markdown" value="Generate Markdown">
+    </h1>
 
-    <input type="button" name="run" value="Run">
-    <input type="button" name="stop" value="Stop" disabled>
-    <input type="button" name="copy" value="Copy link">
-    <input type="button" name="markdown" value="Generate Markdown">
-</h2>
-<textarea name="code" placeholder="Code..."></textarea>
+    <h3 class="code-header">
+        Header
+        <input type="button" name="expand" data-target=".header" value="+">
+        <input type="button" name="collapse" data-target=".header" value="-" hidden>
+    </h3>
+    <div class="header" hidden>
+        <textarea name="header" placeholder="Header..."></textarea>
+    </div>
 
-<h2 title="newline separated">
-    Arguments
-    <input type="button" class="perl add-arg" data-arg="-M5.10.0" value="-M5.10.0">
-    <input type="button" class="perl add-arg" data-arg="-F" value="-F">
-    <input type="button" class="perl add-arg" data-arg="-l" value="-l">
-    <input type="button" class="perl add-arg" data-arg="-p" value="-p">
-</h2>
-<textarea name="args" placeholder="Arguments..."></textarea>
+    <h2>Code</h2>
+    <textarea name="code" placeholder="Code..."></textarea>
 
-<h3>STDIN</h3>
-<textarea name="input" placeholder="STDIN"></textarea>
+    <h3 class="code-footer">
+        Footer
+        <input type="button" name="expand" data-target=".footer" value="+">
+        <input type="button" name="collapse" data-target=".footer" value="-" hidden>
+    </h3>
+    <div class="footer" hidden>
+        <textarea name="footer" placeholder="Footer..."></textarea>
+    </div>
 
-<h3>STDOUT</h3>
-<div class="stdout"></div>
+    <div class="args-wrapper">
+        <h2 class="add-arg">
+            Arguments
+        </h2>
+        <textarea name="args" placeholder="Arguments..."></textarea>
+    </div>
 
-<h3>STDERR</h3>
-<div class="stderr"></div>
+    <h3>STDIN</h3>
+    <textarea name="input" placeholder="STDIN"></textarea>
 
-<script src="dist/app.js"></script>
+    <h3>STDOUT</h3>
+    <div class="stdout"></div>
+
+    <h3>STDERR</h3>
+    <div class="stderr"></div>
+
+    <script src="dist/js/app.js"></script>
+</body>
+</html>

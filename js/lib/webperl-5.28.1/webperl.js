@@ -180,7 +180,7 @@ Perl.init = function (readyCallback) {
     });
   }
   console.debug('Perl: Fetching Emscripten/Perl...');
-  importScripts('../../lib/webperl/emperl.js');
+  importScripts('../../../../js/lib/webperl-5.28.1/emperl.js');
 };
 
 Perl.initStepFinished = function () {

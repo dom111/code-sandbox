@@ -6,11 +6,62 @@ body {
     padding: 1em;
 }
 
-h2 {
+h1,
+h2,
+h3 {
     display: flex;
 
     > * {
         margin-left: 0.5em;
+    }
+}
+
+h1,
+h2,
+h3 {
+    select {
+        padding: 0 1em;
+        border-radius: 0.25em;
+    }
+
+    input[type="button"] {
+        background: var(--accent-color, #fff);
+        border: 0;
+        border-radius: 0.25em;
+        padding: 0 1em;
+
+        &:focus {
+            box-shadow: 0 0 0.5em var(--accent-color, #fff);
+        }
+
+        &[name="run"] {
+            --accent-color: #a6e22e;
+        }
+
+        &[name="stop"] {
+            --accent-color: #f92672;
+        }
+
+        &[name="copy"] {
+            --accent-color: #66d9ef;
+        }
+
+        &[name="markdown"] {
+            --accent-color: #e6db74;
+        }
+
+        &[disabled] {
+            opacity: .6;
+        }
+    }
+
+    &.code-header,
+    &.code-footer {
+        input[type="button"] {
+            height: 1.5em;
+            padding: 0;
+            width: 1.5em;
+        }
     }
 }
 
