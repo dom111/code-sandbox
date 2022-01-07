@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../js/langs/perl/worker.js"],
-  "sourcesContent": ["importScripts('../../lib/webperl/webperl.js');\n\naddEventListener('message', ({ data }) => {\n  // TODO: check 'type' param too...\n  const { code, args, input } = data;\n\n  Perl.output = (content, channel) => {\n    // patch for xterm.js - this allows VT and FF but patches \\n, vs. convertEol option\n    content = content.replace(/(?<!\\r)\\n/g, '\\r\\n');\n\n    if (channel === 2) {\n      postMessage({\n        type: 'output',\n        error: content,\n      });\n\n      return;\n    }\n\n    postMessage({\n      type: 'output',\n      output: content,\n    });\n  };\n\n  Perl.endAfterMain = true;\n\n  Perl.addStateChangeListener((from, to) => {\n    if (to === 'Ended') {\n      postMessage({\n        type: 'done',\n      });\n    }\n  });\n\n  Perl.init(() => {\n    Perl.stdin_buf += input;\n\n    Perl.run(code, args ? args.split(/\\n/) : []);\n  });\n});\n"],
-  "mappings": "MAAA,cAAc,gCAEd,iBAAiB,UAAW,CAAC,CAAE,UAAW,CAExC,GAAM,CAAE,OAAM,OAAM,SAAU,EAE9B,KAAK,OAAS,CAAC,EAAS,IAAY,CAIlC,GAFA,EAAU,EAAQ,QAAQ,aAAc;AAAA,GAEpC,IAAY,EAAG,CACjB,YAAY,CACV,KAAM,SACN,MAAO,IAGT,OAGF,YAAY,CACV,KAAM,SACN,OAAQ,KAIZ,KAAK,aAAe,GAEpB,KAAK,uBAAuB,CAAC,EAAM,IAAO,CACxC,AAAI,IAAO,SACT,YAAY,CACV,KAAM,WAKZ,KAAK,KAAK,IAAM,CACd,KAAK,WAAa,EAElB,KAAK,IAAI,EAAM,EAAO,EAAK,MAAM,MAAQ",
-  "names": []
-}

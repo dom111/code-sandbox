@@ -1,0 +1,2 @@
+(()=>{importScripts("../../../../js/lib/webperl-5.28.1/webperl.js");addEventListener("message",({data:s})=>{let{code:p,args:r,input:i}=s;Perl.output=(e,t)=>{if(t===2){postMessage({type:"output",error:e});return}postMessage({type:"output",output:e})},Perl.endAfterMain=!0,Perl.addStateChangeListener((e,t)=>{t==="Ended"&&postMessage({type:"done"})}),Perl.init(()=>{Perl.stdin_buf+=i,Perl.run(p,r.trim()?r.trim().split(/\n/):[])})});})();
+//# sourceMappingURL=worker.js.map

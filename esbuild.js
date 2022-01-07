@@ -1,14 +1,19 @@
 const esbuild = require('esbuild'),
   { sassPlugin } = require('esbuild-sass-plugin'),
   buildOptions = {
-    entryPoints: ['js/app.ts', 'css/app.scss', 'js/langs/perl/worker.js'],
+    entryPoints: [
+      'js/app.ts',
+      'css/app.scss',
+      'js/langs/webperl-5.28.1/worker.js',
+      'js/langs/javascript-browser/worker.js',
+    ],
     bundle: true,
     minify: true,
     sourcemap: true,
     watch: false,
     outdir: 'dist',
     plugins: [sassPlugin()],
-    entryNames: '[name]',
+    entryNames: '[dir]/[name]',
   };
 
 process.argv.forEach((arg) => {

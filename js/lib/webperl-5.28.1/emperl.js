@@ -23,8 +23,8 @@ Module.expectedDataFileDownloads++;
     } else {
       throw 'using preloaded data can only be done on a web page or in a web worker';
     }
-    var PACKAGE_NAME = '../../lib/webperl/emperl.data';
-    var REMOTE_PACKAGE_BASE = '../../lib/webperl/emperl.data';
+    var PACKAGE_NAME = '../../../../js/lib/webperl-5.28.1/emperl.data';
+    var REMOTE_PACKAGE_BASE = '../../../../js/lib/webperl-5.28.1/emperl.data';
     if (
       typeof Module['locateFilePackage'] === 'function' &&
       !Module['locateFile']
@@ -8653,7 +8653,7 @@ function isDataURI(filename) {
     ? filename.startsWith(dataURIPrefix)
     : filename.indexOf(dataURIPrefix) === 0;
 }
-var wasmBinaryFile = '../../lib/webperl/emperl.wasm';
+var wasmBinaryFile = '../../../../js/lib/webperl-5.28.1/emperl.wasm';
 if (!isDataURI(wasmBinaryFile)) {
   wasmBinaryFile = locateFile(wasmBinaryFile);
 }
