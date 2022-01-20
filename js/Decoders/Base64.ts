@@ -6,6 +6,11 @@ export class Base64 implements Decoder {
   }
 
   public matches(code: string): boolean {
+    // base64 input is at least 4 chars
+    if (code.length < 4) {
+      return false;
+    }
+
     try {
       atob(code);
 
