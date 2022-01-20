@@ -9,9 +9,21 @@ import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/edit/matchbrackets';
 import { decoders } from './Decoders';
 
+export type IHashData = {
+  lang: string;
+  header?: string;
+  code: string;
+  footer?: string;
+  args?: string;
+  input?: string;
+  type?: 'tty' | 'resource';
+  mime?: string;
+};
+
 export class UI {
   private io: IO;
   private expanders: NodeListOf<HTMLInputElement>;
+  private outputTypes: NodeListOf<HTMLInputElement>;
   private argsWrapper: HTMLDivElement;
   private addArg: HTMLHeadingElement;
   private stopButton: HTMLInputElement;
@@ -92,7 +104,8 @@ export class UI {
       this.stdin,
       this.stdout,
       this.stderr,
-      this.args
+      this.args,
+      document.querySelector('.html-out')
     );
 
     this.expanders = document.querySelectorAll(
@@ -122,6 +135,7 @@ export class UI {
     this.markdownButton = document.querySelector(
       'input[name="markdown"]'
     ) as HTMLInputElement;
+    this.outputTypes = document.querySelectorAll('.stdout-header button');
     this.connectExpanders();
     this.parseHashData(window.location.hash);
     this.populateArgs();
@@ -151,6 +165,9 @@ export class UI {
 
       UI.copied(this.markdownButton);
     });
+    this.outputTypes.forEach((button) =>
+      button.addEventListener('click', () => this.setOutputType(button))
+    );
 
     window.addEventListener('hashchange', () => {
       this.parseHashData(window.location.hash);
@@ -239,6 +256,18 @@ export class UI {
   }
 
   private resize(): void {
+    if (this.stdout.element.parentElement.hasAttribute('hidden')) {
+      this.fit.activate(this.stderr);
+
+      this.fit.fit();
+
+      this.stderr.resize(this.stderr.cols, 6);
+
+      return;
+    }
+
+    this.fit.activate(this.stdout);
+
     this.fit.fit();
     this.stderr.resize(this.stdout.cols, 6);
   }
@@ -412,6 +441,32 @@ export class UI {
     });
   }
 
+  private setOutputType(button: HTMLButtonElement): void {
+    const [current] = Array.from(this.outputTypes).filter((button) =>
+      button.hasAttribute('disabled')
+    );
+
+    if (current === button) {
+      return;
+    }
+
+    current.removeAttribute('disabled');
+    document.querySelector(current.dataset.target).setAttribute('hidden', '');
+
+    button.setAttribute('disabled', '');
+    document.querySelector(button.dataset.target).removeAttribute('hidden');
+
+    this.resize();
+  }
+
+  private getOutputType(): string {
+    const [current] = Array.from(this.outputTypes).filter((button) =>
+      button.hasAttribute('disabled')
+    );
+
+    return current.dataset.type;
+  }
+
   private static copied(button: HTMLButtonElement | HTMLInputElement): void {
     const originalText = button.value;
 
@@ -478,21 +533,43 @@ export class UI {
     this.io.setCodeFooter(data.footer ?? '');
     this.io.setArgs(data.args ?? '');
     this.io.setStdin(data.input ?? '');
+
+    if (data.type) {
+      this.outputTypes.forEach((button) => {
+        if (button.dataset.type === data.type) {
+          this.setOutputType(button);
+        }
+      });
+    }
+
+    // `mime` being set implies `type`
+    if (data.mime) {
+      this.io.setHTMLOutMimeType(data.mime);
+
+      if (!data.type) {
+        this.outputTypes.forEach((button) => {
+          if (button.dataset.type === 'resource') {
+            this.setOutputType(button);
+          }
+        });
+      }
+    }
   }
 
   private buildHashData() {
-    const data = {},
-      lang = this.getLangId(),
+    const data: IHashData = {
+        lang: this.getLangId(),
+        code: this.io.getRawCode(),
+      },
       header = this.io.getRawCodeHeader(),
-      code = this.io.getRawCode(),
       footer = this.io.getRawCodeFooter(),
       args = this.io.getArgs(),
-      input = this.io.getStdin();
+      input = this.io.getStdin(),
+      type = this.getOutputType(),
+      mime = this.io.getHTMLOutMimeType();
 
     Object.entries({
-      lang,
       header,
-      code,
       footer,
       args,
       input,
@@ -501,6 +578,15 @@ export class UI {
         data[key] = value;
       }
     });
+
+    // we don't need to set both mime and type most of the time
+    if (type === 'resource') {
+      if (mime === 'text/html') {
+        data.type = 'resource';
+      } else {
+        data.mime = mime;
+      }
+    }
 
     return btoa(JSON.stringify(data));
   }
