@@ -1,33 +1,34 @@
 {
-  "name": "perl-it-online",
-  "version": "0.0.1",
-  "description": "Perl - in browser (WebPerl)",
+  "name": "code-sandbox",
+  "version": "0.1.0",
+  "description": "Code Sandbox - run code online via WASM",
   "scripts": {
-    "build": "npm run prettier:format && npm run build:esbuild",
-    "build:watch": "npm run prettier:format && npm run build:esbuild:watch",
+    "build": "npm run build:esbuild",
+    "build:watch": "npm run build:esbuild:watch",
     "build:esbuild": "node esbuild.js prod",
-    "build:esbuild:watch": "node esbuild.js dev watch",
-    "prettier:check": "prettier --config .prettierrc 'js/**/*.ts' 'js/langs/**/*.js' esbuild.js",
-    "prettier:format": "prettier --config .prettierrc 'js/**/*.ts' esbuild.js --write"
+    "build:esbuild:watch": "node esbuild.js dev watch"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dom111/perl-it-online.git"
+    "url": "git+https://github.com/dom111/code-sandbox.git"
   },
-  "author": "",
+  "author": "Dom Hastings <dom111@users.noreply.github.com>",
   "license": "UNLICENSED",
   "bugs": {
-    "url": "https://github.com/dom111/perl-it-online/issues"
+    "url": "https://github.com/dom111/code-sandbox/issues"
   },
-  "homepage": "https://github.com/dom111/perl-it-online#readme",
+  "homepage": "https://github.com/dom111/code-sandbox#readme",
   "dependencies": {
-    "@gfx/zopfli": "^1.0.15",
-    "@types/codemirror": "^5.60.5",
     "codemirror": "^5.65.0",
-    "esbuild": "^0.14.10",
-    "esbuild-sass-plugin": "^2.0.0",
-    "prettier": "^2.5.1",
+    "melba-toast": "^2.0.0",
     "xterm": "^4.16.0",
     "xterm-addon-fit": "^0.5.0"
+  },
+  "devDependencies": {
+    "@types/codemirror": "^5.60.5",
+    "esbuild": "^0.14.10",
+    "esbuild-plugin-prettier": "^1.0.0",
+    "esbuild-sass-plugin": "^2.0.0",
+    "prettier": "^2.5.1"
   }
 }

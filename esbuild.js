@@ -1,18 +1,22 @@
-const esbuild = require('esbuild'),
+const { build } = require('esbuild'),
+  { Prettier } = require('esbuild-plugin-prettier'),
   { sassPlugin } = require('esbuild-sass-plugin'),
   buildOptions = {
     entryPoints: [
       'js/app.ts',
       'css/app.scss',
-      'js/langs/webperl-5.28.1/worker.js',
       'js/langs/javascript-browser/worker.js',
+      'js/langs/webperl-5.28.1/worker.js',
     ],
     bundle: true,
     minify: true,
     sourcemap: true,
     watch: false,
     outdir: 'dist',
-    plugins: [sassPlugin()],
+    plugins: [
+        sassPlugin(),
+        new Prettier(),
+    ],
     entryNames: '[dir]/[name]',
   };
 
@@ -35,8 +39,7 @@ process.argv.forEach((arg) => {
 
 process.stdout.write(`Building... `);
 
-esbuild
-  .build(buildOptions)
+build(buildOptions)
   .then(() => {
     console.log('\x1b[32mdone.\x1b[0m');
   })

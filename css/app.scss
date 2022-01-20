@@ -1,5 +1,6 @@
 @use '~codemirror/lib/codemirror.css';
 @use '~codemirror/theme/monokai.css';
+@use '~melba-toast/dist/Melba.css';
 @use '~xterm/css/xterm.css';
 
 body {
@@ -101,6 +102,16 @@ h3 {
     }
 }
 
+.toast__container {
+    left: auto;
+    right: 1em;
+    top: 1em;
+    z-index: 3;
+
+    .toast--hide {
+        transform: translateX(100%) translateY(0);
+    }
+}
 
 iframe {
     border: 1px solid rgba(248, 248, 242, .3);

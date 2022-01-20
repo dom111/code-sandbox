@@ -69,10 +69,7 @@ export class IO {
   }
 
   private static getAsArray(field: Editor): number[] {
-    const code = IO.getRaw(field),
-      decoder = decoders.decoder(code);
-
-    return decoder.decode(code);
+    return decoders.decode(IO.getRaw(field));
   }
 
   public getRawCodeHeader(): string {

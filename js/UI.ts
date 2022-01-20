@@ -3,6 +3,12 @@ import { ITerminalOptions, Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit/src/FitAddon';
 import IO from './IO';
 import { langs } from './Langs';
+import {
+  Melba,
+  MelbaConstructorOptions,
+  MelbaOptions,
+  MelbaType,
+} from 'melba-toast';
 
 import 'codemirror/addon/display/placeholder';
 import 'codemirror/addon/edit/closebrackets';
@@ -138,7 +144,11 @@ export class UI {
     this.outputTypes = document.querySelectorAll('.stdout-header button');
     this.connectExpanders();
     this.parseHashData(window.location.hash);
-    this.populateArgs();
+    try {
+      this.populateArgs();
+    } catch (e) {
+      this.toast(e.message, 'error');
+    }
     this.codeOnChange();
 
     if (this.io.getCodeAsArray().length) {
@@ -347,7 +357,7 @@ export class UI {
     };
 
     worker.onerror = (e) => {
-      console.error(e);
+      this.toast(`Worker error: ${e.message}`, 'error');
 
       this.runButton.removeAttribute('disabled');
       this.stopButton.setAttribute('disabled', '');
@@ -494,13 +504,13 @@ export class UI {
       data = JSON.parse(jsonData);
     } catch (e) {
       if (e instanceof DOMException) {
-        console.error('Bad base64 data: ', e);
+        this.toast('Unable to decode URL data. Aborting.', 'error');
 
         return;
       }
 
       if (e instanceof SyntaxError) {
-        console.error('Bad JSON data: ', e);
+        this.toast('Unable to decode JSON data. Aborting.', 'error');
 
         return;
       }
@@ -644,6 +654,28 @@ export class UI {
     }
 
     this.bytesPlural.removeAttribute('hidden');
+  }
+
+  public toast(
+    content: string,
+    type: MelbaType,
+    options: Omit<MelbaConstructorOptions, 'content' | 'type'> = {}
+  ): Melba {
+    if (!options.events) {
+      options.events = {};
+    }
+
+    if (!options.events.click) {
+      options.events.click = [];
+    }
+
+    options.events.click.push((toast) => toast.hide());
+
+    return new Melba({
+      ...options,
+      content,
+      type,
+    });
   }
 }
 
