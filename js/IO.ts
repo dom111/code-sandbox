@@ -3,6 +3,10 @@ import { Terminal } from 'xterm';
 import { decoders } from './Decoders';
 
 export class IO {
+  private stdoutBuffer: string = '';
+  private htmlOutMimeType: string = 'text/html';
+  private htmlOutTimeout: null | number = null;
+
   constructor(
     private languageSelector: HTMLSelectElement,
     private header: Editor,
@@ -11,12 +15,27 @@ export class IO {
     private stdin: Editor,
     private stdout: Terminal,
     private stderr: Terminal,
-    private args: Editor
+    private args: Editor,
+    private htmlOut: HTMLIFrameElement
   ) {}
 
   public writeStdout(text: string): void {
+    this.stdoutBuffer += text;
+
     // patch for xterm.js - this allows VT and FF but patches \n, vs. convertEol option
     this.stdout.write(text.replace(/(?<!\r)\n/g, '\r\n'));
+
+    if (this.htmlOutTimeout) {
+      clearTimeout(this.htmlOutTimeout);
+    }
+
+    this.htmlOutTimeout = setTimeout(() => {
+      this.htmlOut.src = `data:${this.htmlOutMimeType};base64,${btoa(
+        this.stdoutBuffer
+      )}`;
+
+      this.htmlOutTimeout = null;
+    }, 100);
   }
 
   public writeStderr(text: string): void {
@@ -25,11 +44,24 @@ export class IO {
   }
 
   public clearStdout(): void {
+    this.stdoutBuffer = '';
     this.stdout.reset();
+    this.htmlOut.src = `data:${this.htmlOutMimeType};base64,`;
   }
 
   public clearStderr(): void {
     this.stderr.reset();
+  }
+
+  public getHTMLOutMimeType(): string {
+    return this.htmlOutMimeType;
+  }
+
+  public setHTMLOutMimeType(type: string): void {
+    this.htmlOutMimeType = type;
+    this.htmlOut.src = `data:${this.htmlOutMimeType};base64,${btoa(
+      this.stdoutBuffer
+    )}`;
   }
 
   public static getRaw(field: Editor): string {
