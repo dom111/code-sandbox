@@ -11,6 +11,10 @@ export class Decoders {
     this.registered.push(...decoders);
   }
 
+  public decode(code: string): number[] {
+    return this.decoder(code).decode(code);
+  }
+
   public decoder(code: string): Decoder {
     const [decoder] = this.registered.filter((decoder): boolean =>
       decoder.matches(code)
