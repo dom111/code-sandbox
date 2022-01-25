@@ -17,3 +17,4 @@
 - [ ] Maybe add bash via jslinux somehow? (https://bellard.org/jslinux/)
 - [ ] Accessibility (aria-label of all fields etc)
 - [ ] Responsive view
+- [ ] Add tests, especially for the decoders
