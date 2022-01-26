@@ -179,6 +179,21 @@ export class UI {
       button.addEventListener('click', () => this.setOutputType(button))
     );
 
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 's' && (event.ctrlKey || event.metaKey)) {
+        const link = this.buildLink();
+
+        window.history.pushState(this.buildHashData(), document.title, link);
+        navigator.clipboard.writeText(link);
+
+        this.toast('Saved!', 'success', {
+          hide: 2,
+        });
+
+        event.preventDefault();
+      }
+    });
+
     window.addEventListener('hashchange', () => {
       this.parseHashData(window.location.hash);
 
