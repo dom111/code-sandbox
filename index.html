@@ -53,8 +53,11 @@
 
     <h3 class="stdout-header">
         STDOUT
-        <button data-type="tty" data-target=".stdout" disabled><code>tty</code></button>
-        <button data-type="resource" data-target=".html-out"><code>resource</code></button>
+        <input type="text" list="mimeTypes" placeholder="text/plain">
+        <datalist id="mimeTypes">
+            <option value="text/plain">
+            <option value="text/html">
+        </datalist>
     </h3>
     <div class="stdout"></div>
     <iframe class="html-out" src="data:text/html," hidden></iframe>

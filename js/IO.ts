@@ -1,11 +1,9 @@
 import { Editor } from 'codemirror';
-import { Terminal } from 'xterm';
 import { decoders } from './Decoders';
+import Renderers from './Renderers';
 
 export class IO {
-  private stdoutBuffer: string = '';
   private htmlOutMimeType: string = 'text/html';
-  private htmlOutTimeout: null | number = null;
 
   constructor(
     private languageSelector: HTMLSelectElement,
@@ -13,55 +11,25 @@ export class IO {
     private code: Editor,
     private footer: Editor,
     private stdin: Editor,
-    private stdout: Terminal,
-    private stderr: Terminal,
-    private args: Editor,
-    private htmlOut: HTMLIFrameElement
+    private stdout: Renderers,
+    private stderr: Renderers,
+    private args: Editor
   ) {}
 
   public writeStdout(text: string): void {
-    this.stdoutBuffer += text;
-
-    // patch for xterm.js - this allows VT and FF but patches \n, vs. convertEol option
-    this.stdout.write(text.replace(/(?<!\r)\n/g, '\r\n'));
-
-    if (this.htmlOutTimeout) {
-      clearTimeout(this.htmlOutTimeout);
-    }
-
-    this.htmlOutTimeout = setTimeout(() => {
-      this.htmlOut.src = `data:${this.htmlOutMimeType};base64,${btoa(
-        this.stdoutBuffer
-      )}`;
-
-      this.htmlOutTimeout = null;
-    }, 100);
+    this.stdout.write(text);
   }
 
   public writeStderr(text: string): void {
-    // patch for xterm.js - this allows VT and FF but patches \n, vs. convertEol option
-    this.stderr.write(text.replace(/(?<!\r)\n/g, '\r\n'));
+    this.stderr.write(text);
   }
 
   public clearStdout(): void {
-    this.stdoutBuffer = '';
     this.stdout.reset();
-    this.htmlOut.src = `data:${this.htmlOutMimeType};base64,`;
   }
 
   public clearStderr(): void {
     this.stderr.reset();
-  }
-
-  public getHTMLOutMimeType(): string {
-    return this.htmlOutMimeType;
-  }
-
-  public setHTMLOutMimeType(type: string): void {
-    this.htmlOutMimeType = type;
-    this.htmlOut.src = `data:${this.htmlOutMimeType};base64,${btoa(
-      this.stdoutBuffer
-    )}`;
   }
 
   public static getRaw(field: Editor): string {

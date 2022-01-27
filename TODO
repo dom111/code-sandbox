@@ -18,3 +18,4 @@
 - [ ] Accessibility (aria-label of all fields etc)
 - [ ] Responsive view
 - [ ] Add tests, especially for the decoders
+- [ ] Add `Inputs` renderer to replace the current inputs and args, similar to `Renderers`

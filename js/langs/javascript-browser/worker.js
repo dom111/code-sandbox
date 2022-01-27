@@ -27,12 +27,14 @@ addEventListener('message', ({ data }) => {
   let result;
 
   try {
-    result = eval(String.fromCharCode(...code));
+    // result = eval(String.fromCharCode(...code));
+    result = eval(code.map((char) => String.fromCharCode(char)).join(''));
 
     if (result instanceof Function) {
       result = result(input);
     }
   } catch (e) {
+    debugger;
     postMessage({
       type: 'output',
       error: e.message,
