@@ -1,19 +1,15 @@
 import { Editor, EditorConfiguration, fromTextArea } from 'codemirror';
-import { ITerminalOptions, Terminal } from 'xterm';
-import { FitAddon } from 'xterm-addon-fit/src/FitAddon';
+import { Melba, MelbaConstructorOptions, MelbaType } from 'melba-toast';
+import { Renderers, createDevice } from './Renderers';
 import IO from './IO';
+import TTY from './Renderers/TTY';
+import { decoders } from './Decoders';
 import { langs } from './Langs';
-import {
-  Melba,
-  MelbaConstructorOptions,
-  MelbaOptions,
-  MelbaType,
-} from 'melba-toast';
 
 import 'codemirror/addon/display/placeholder';
 import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/edit/matchbrackets';
-import { decoders } from './Decoders';
+import IFrame from './Renderers/IFrame';
 
 export type IHashData = {
   lang: string;
@@ -27,28 +23,28 @@ export type IHashData = {
 };
 
 export class UI {
-  private io: IO;
-  private expanders: NodeListOf<HTMLInputElement>;
-  private outputTypes: NodeListOf<HTMLInputElement>;
-  private argsWrapper: HTMLDivElement;
   private addArg: HTMLHeadingElement;
-  private stopButton: HTMLInputElement;
-  private runButton: HTMLInputElement;
+  private args: CodeMirror.Editor;
+  private argsWrapper: HTMLDivElement;
   private bytesCount: HTMLSpanElement;
   private bytesPlural: HTMLSpanElement;
-  private encoded: HTMLSpanElement;
-  private format: HTMLSpanElement;
-  private langSelector: HTMLSelectElement;
-  private copyLinkButton: HTMLInputElement;
-  private markdownButton: HTMLInputElement;
-  private stdout: Terminal;
-  private stderr: Terminal;
-  private fit: FitAddon;
-  private codeHeader: CodeMirror.Editor;
   private code: CodeMirror.Editor;
   private codeFooter: CodeMirror.Editor;
+  private codeHeader: CodeMirror.Editor;
+  private copyLinkButton: HTMLInputElement;
+  private encoded: HTMLSpanElement;
+  private expanders: NodeListOf<HTMLInputElement>;
+  private format: HTMLSpanElement;
+  private io: IO;
+  private langSelector: HTMLSelectElement;
+  private markdownButton: HTMLInputElement;
+  private mimeType: string = 'text/plain';
+  private mimeTypeInput: HTMLInputElement;
+  private runButton: HTMLInputElement;
+  private stderr: Renderers;
   private stdin: CodeMirror.Editor;
-  private args: CodeMirror.Editor;
+  private stdout: Renderers;
+  private stopButton: HTMLInputElement;
 
   constructor() {
     this.langSelector = document.querySelector(
@@ -57,19 +53,20 @@ export class UI {
 
     this.addRegisteredLangs();
 
-    this.stdout = UI.createTerminal();
+    this.stdout = createDevice(
+      new IFrame(document.querySelector('div.stdout')),
+      new TTY(document.querySelector('div.stdout') as HTMLDivElement)
+    );
+    this.stdout.activate('text/plain');
 
-    this.stderr = UI.createTerminal({
-      theme: {
-        foreground: '#f92672',
-      },
-    });
-
-    this.fit = new FitAddon();
-
-    this.stdout.loadAddon(this.fit);
-    this.stdout.open(document.querySelector('div.stdout') as HTMLDivElement);
-    this.stderr.open(document.querySelector('div.stderr') as HTMLDivElement);
+    this.stderr = createDevice(
+      new TTY(document.querySelector('div.stderr') as HTMLDivElement, {
+        theme: {
+          foreground: '#f92672',
+        },
+      })
+    );
+    this.stderr.activate('text/plain');
 
     this.codeHeader = UI.createEditor(
       document.querySelector('textarea[name="header"]') as HTMLTextAreaElement,
@@ -110,8 +107,7 @@ export class UI {
       this.stdin,
       this.stdout,
       this.stderr,
-      this.args,
-      document.querySelector('.html-out')
+      this.args
     );
 
     this.expanders = document.querySelectorAll(
@@ -141,21 +137,8 @@ export class UI {
     this.markdownButton = document.querySelector(
       'input[name="markdown"]'
     ) as HTMLInputElement;
-    this.outputTypes = document.querySelectorAll('.stdout-header button');
+    this.mimeTypeInput = document.querySelector('.stdout-header input');
     this.connectExpanders();
-    this.parseHashData(window.location.hash);
-    try {
-      this.populateArgs();
-    } catch (e) {
-      this.toast(e.message, 'error');
-    }
-    this.codeOnChange();
-
-    if (this.io.getCodeAsArray().length) {
-      this.runCode();
-    }
-
-    this.resize();
 
     // bind events
     this.io.onCodeChange(() => this.codeOnChange());
@@ -175,8 +158,8 @@ export class UI {
 
       UI.copied(this.markdownButton);
     });
-    this.outputTypes.forEach((button) =>
-      button.addEventListener('click', () => this.setOutputType(button))
+    this.mimeTypeInput.addEventListener('input', () =>
+      this.setMimeType(this.mimeTypeInput.value || 'text/plain', false)
     );
 
     window.addEventListener('keydown', (event) => {
@@ -202,6 +185,21 @@ export class UI {
       }
     });
     window.addEventListener('resize', () => this.resize());
+
+    // onload
+    this.parseHashData(window.location.hash);
+    try {
+      this.populateArgs();
+    } catch (e) {
+      this.toast(e.message, 'error');
+    }
+    this.codeOnChange();
+
+    if (this.io.getCodeAsArray().length) {
+      this.runCode();
+    }
+
+    this.resize();
   }
 
   private addRegisteredLangs(): void {
@@ -252,18 +250,6 @@ export class UI {
     });
   }
 
-  private static createTerminal(options: ITerminalOptions = {}): Terminal {
-    return new Terminal({
-      ...options,
-      theme: {
-        background: '#272822',
-        cursor: 'transparent',
-        foreground: '#f8f8f2',
-        ...(options.theme ?? {}),
-      },
-    });
-  }
-
   private static createEditor(
     element: HTMLTextAreaElement,
     options: EditorConfiguration = {}
@@ -281,20 +267,8 @@ export class UI {
   }
 
   private resize(): void {
-    if (this.stdout.element.parentElement.hasAttribute('hidden')) {
-      this.fit.activate(this.stderr);
-
-      this.fit.fit();
-
-      this.stderr.resize(this.stderr.cols, 6);
-
-      return;
-    }
-
-    this.fit.activate(this.stdout);
-
-    this.fit.fit();
-    this.stderr.resize(this.stdout.cols, 6);
+    this.stdout.resize();
+    this.stderr.resize();
   }
 
   private codeOnChange(): void {
@@ -466,30 +440,15 @@ export class UI {
     });
   }
 
-  private setOutputType(button: HTMLButtonElement): void {
-    const [current] = Array.from(this.outputTypes).filter((button) =>
-      button.hasAttribute('disabled')
-    );
+  private setMimeType(mimeType: string, setInput: boolean = true): void {
+    this.mimeType = mimeType;
 
-    if (current === button) {
-      return;
+    if (setInput) {
+      this.mimeTypeInput.value = mimeType;
     }
 
-    current.removeAttribute('disabled');
-    document.querySelector(current.dataset.target).setAttribute('hidden', '');
-
-    button.setAttribute('disabled', '');
-    document.querySelector(button.dataset.target).removeAttribute('hidden');
-
-    this.resize();
-  }
-
-  private getOutputType(): string {
-    const [current] = Array.from(this.outputTypes).filter((button) =>
-      button.hasAttribute('disabled')
-    );
-
-    return current.dataset.type;
+    this.stdout.activate(mimeType);
+    this.stdout.resize();
   }
 
   private static copied(button: HTMLButtonElement | HTMLInputElement): void {
@@ -559,25 +518,8 @@ export class UI {
     this.io.setArgs(data.args ?? '');
     this.io.setStdin(data.input ?? '');
 
-    if (data.type) {
-      this.outputTypes.forEach((button) => {
-        if (button.dataset.type === data.type) {
-          this.setOutputType(button);
-        }
-      });
-    }
-
-    // `mime` being set implies `type`
     if (data.mime) {
-      this.io.setHTMLOutMimeType(data.mime);
-
-      if (!data.type) {
-        this.outputTypes.forEach((button) => {
-          if (button.dataset.type === 'resource') {
-            this.setOutputType(button);
-          }
-        });
-      }
+      this.setMimeType(data.mime);
     }
   }
 
@@ -590,8 +532,7 @@ export class UI {
       footer = this.io.getRawCodeFooter(),
       args = this.io.getArgs(),
       input = this.io.getStdin(),
-      type = this.getOutputType(),
-      mime = this.io.getHTMLOutMimeType();
+      mime = this.mimeType;
 
     Object.entries({
       header,
@@ -604,13 +545,8 @@ export class UI {
       }
     });
 
-    // we don't need to set both mime and type most of the time
-    if (type === 'resource') {
-      if (mime === 'text/html') {
-        data.type = 'resource';
-      } else {
-        data.mime = mime;
-      }
+    if (mime !== 'text/plain') {
+      data.mime = mime;
     }
 
     return btoa(JSON.stringify(data));
