@@ -1,6 +1,6 @@
 {
   "name": "code-sandbox",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Code Sandbox - run code online via WASM",
   "scripts": {
     "build": "npm run build:esbuild",
