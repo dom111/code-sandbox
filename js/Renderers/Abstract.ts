@@ -39,7 +39,7 @@ export abstract class Abstract implements Renderer {
 
   abstract reset(): void;
 
-  abstract resize(): void;
+  public resize(): void {}
 }
 
 export default Abstract;

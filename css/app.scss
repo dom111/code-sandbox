@@ -11,13 +11,18 @@ body {
     padding: 1em;
 }
 
+.github-corner {
+    position: relative;
+    z-index: 1;
+}
+
 h1,
 h2,
 h3 {
     display: flex;
 
     > * {
-        margin-left: 0.5em;
+        margin-left: .5em;
     }
 }
 
@@ -26,17 +31,17 @@ h2,
 h3 {
     select {
         padding: 0 1em;
-        border-radius: 0.25em;
+        border-radius: .25em;
     }
 
     input[type="button"] {
         background: var(--accent-color, #fff);
         border: 0;
-        border-radius: 0.25em;
+        border-radius: .25em;
         padding: 0 1em;
 
         &:focus {
-            box-shadow: 0 0 0.5em var(--accent-color, #fff);
+            box-shadow: 0 0 .5em var(--accent-color, #fff);
         }
 
         &[name="run"] {
@@ -77,7 +82,7 @@ h3 {
     height: auto;
 
     pre.CodeMirror-placeholder {
-        opacity: 0.5;
+        opacity: .5;
     }
 
     .CodeMirror-scroll {
