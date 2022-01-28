@@ -26,10 +26,6 @@ export class TTY extends Abstract implements Renderer {
     return true;
   }
 
-  public name(): string {
-    return 'TTY';
-  }
-
   public write(char: number): void;
   public write(data: string): void;
   public write(char: number | string): void {

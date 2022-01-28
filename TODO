@@ -19,3 +19,5 @@
 - [ ] Responsive view
 - [ ] Add tests, especially for the decoders
 - [ ] Add `Inputs` renderer to replace the current inputs and args, similar to `Renderers`
+- [ ] Add `Code` renderer to syntax highlight quines or other code output.
+- [ ] Fix the mime selector as that has some undesirable behaviour when editing at the moment.
