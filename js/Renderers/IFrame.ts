@@ -31,8 +31,6 @@ export class IFrame extends Abstract implements Renderer {
     this.update();
   }
 
-  public resize(): void {}
-
   public write(char: number): void;
   public write(data: string): void;
   public write(char: number | string): void {

@@ -1,13 +1,14 @@
 import { Editor, EditorConfiguration, fromTextArea } from 'codemirror';
 import { Melba, MelbaConstructorOptions, MelbaType } from 'melba-toast';
 import { Renderers, createDevice } from './Renderers';
+import Code from './Renderers/Code';
 import IFrame from './Renderers/IFrame';
 import IO from './IO';
 import Image from './Renderers/Image';
 import TTY from './Renderers/TTY';
 import { decoders } from './Decoders';
-
 import { langs } from './Langs';
+
 import 'codemirror/addon/display/placeholder';
 import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/edit/matchbrackets';
@@ -54,10 +55,15 @@ export class UI {
 
     this.addRegisteredLangs();
 
+    const stdoutContainer = document.querySelector(
+      'div.stdout'
+    ) as HTMLDivElement;
+
     this.stdout = createDevice(
-      new Image(document.querySelector('div.stdout')),
-      new IFrame(document.querySelector('div.stdout')),
-      new TTY(document.querySelector('div.stdout') as HTMLDivElement)
+      new Code(stdoutContainer),
+      new Image(stdoutContainer),
+      new IFrame(stdoutContainer),
+      new TTY(stdoutContainer)
     );
     this.stdout.activate('text/plain');
 
@@ -252,7 +258,7 @@ export class UI {
     });
   }
 
-  private static createEditor(
+  public static createEditor(
     element: HTMLTextAreaElement,
     options: EditorConfiguration = {}
   ): Editor {
