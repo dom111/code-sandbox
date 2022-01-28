@@ -2,7 +2,7 @@ import Abstract from './Abstract';
 import { Renderer } from '../Renderers';
 
 export class IFrame extends Abstract implements Renderer {
-  private buffer: string = '';
+  protected buffer: string = '';
   protected container: HTMLIFrameElement;
   protected mimeType: string = 'text/html';
 
@@ -23,11 +23,7 @@ export class IFrame extends Abstract implements Renderer {
   }
 
   public matches(mimeType: string): boolean {
-    return ['text/html'].includes(mimeType) || /^image\//.test(mimeType);
-  }
-
-  public name(): string {
-    return 'IFrame';
+    return ['text/html'].includes(mimeType);
   }
 
   public reset(): void {

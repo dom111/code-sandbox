@@ -3,7 +3,6 @@ export interface Renderer {
   deactivate(): void;
   isActive(): boolean;
   matches(mimeType: string): boolean;
-  name(): string;
   reset(): void;
   resize(): void;
   write(char: number | string): void;

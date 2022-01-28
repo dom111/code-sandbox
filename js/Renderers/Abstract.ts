@@ -34,8 +34,6 @@ export abstract class Abstract implements Renderer {
     return true;
   }
 
-  abstract name(): string;
-
   abstract write(char: number): void;
   abstract write(data: string): void;
 

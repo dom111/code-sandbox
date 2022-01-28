@@ -1,15 +1,16 @@
 import { Editor, EditorConfiguration, fromTextArea } from 'codemirror';
 import { Melba, MelbaConstructorOptions, MelbaType } from 'melba-toast';
 import { Renderers, createDevice } from './Renderers';
+import IFrame from './Renderers/IFrame';
 import IO from './IO';
+import Image from './Renderers/Image';
 import TTY from './Renderers/TTY';
 import { decoders } from './Decoders';
-import { langs } from './Langs';
 
+import { langs } from './Langs';
 import 'codemirror/addon/display/placeholder';
 import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/edit/matchbrackets';
-import IFrame from './Renderers/IFrame';
 
 export type IHashData = {
   lang: string;
@@ -54,6 +55,7 @@ export class UI {
     this.addRegisteredLangs();
 
     this.stdout = createDevice(
+      new Image(document.querySelector('div.stdout')),
       new IFrame(document.querySelector('div.stdout')),
       new TTY(document.querySelector('div.stdout') as HTMLDivElement)
     );
