@@ -71,6 +71,7 @@ export class UI {
 
     this.stderr = createDevice(
       new TTY(document.querySelector('div.stderr') as HTMLDivElement, {
+        rows: 8,
         theme: {
           foreground: '#f92672',
         },

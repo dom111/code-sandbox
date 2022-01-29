@@ -5,6 +5,7 @@ import { Renderer } from '../Renderers';
 
 export class TTY extends Abstract implements Renderer {
   private fit: FitAddon;
+  private options: ITerminalOptions;
   private terminal: Terminal;
 
   constructor(parent: HTMLElement, options: ITerminalOptions = {}) {
@@ -20,6 +21,8 @@ export class TTY extends Abstract implements Renderer {
     this.terminal = TTY.createTerminal(options);
     this.terminal.loadAddon(this.fit);
     this.terminal.open(this.container);
+
+    this.options = options;
   }
 
   public matches(): boolean {
@@ -50,6 +53,13 @@ export class TTY extends Abstract implements Renderer {
 
         this.fit.activate(this.terminal);
         this.fit.fit(); // TODO: add in a limit for secondary elements like stderr
+
+        if (this.options.rows || this.options.cols) {
+          this.terminal.resize(
+            this.options.cols || this.terminal.cols,
+            this.options.rows || this.terminal.rows
+          );
+        }
       });
     });
   }
