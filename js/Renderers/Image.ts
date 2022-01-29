@@ -25,6 +25,7 @@ html, body {
 
 body > img {
   --z: 1;
+  image-rendering: pixelated;
   transform: scale(var(--z));
   transform-origin: 0 0;
 }
@@ -145,6 +146,12 @@ body > img {
       'image/vnd.microsoft.icon',
       'image/webp',
     ].includes(mimeType);
+  }
+
+  public reset(): void {
+    super.reset();
+
+    this.imageBuffer = '';
   }
 
   public write(char: number): void;
