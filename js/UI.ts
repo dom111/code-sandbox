@@ -12,6 +12,7 @@ import { langs } from './Langs';
 import 'codemirror/addon/display/placeholder';
 import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/edit/matchbrackets';
+import PBMImage from './Renderers/PBMImage';
 
 export type IHashData = {
   lang: string;
@@ -61,6 +62,7 @@ export class UI {
 
     this.stdout = createDevice(
       new Code(stdoutContainer),
+      new PBMImage(stdoutContainer),
       new Image(stdoutContainer),
       new IFrame(stdoutContainer),
       new TTY(stdoutContainer)
