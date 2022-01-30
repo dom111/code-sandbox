@@ -34,20 +34,20 @@ export class UI {
   private code: CodeMirror.Editor;
   private codeFooter: CodeMirror.Editor;
   private codeHeader: CodeMirror.Editor;
-  private copyLinkButton: HTMLInputElement;
+  private copyLinkButton: HTMLButtonElement;
   private encoded: HTMLSpanElement;
-  private expanders: NodeListOf<HTMLInputElement>;
+  private expanders: NodeListOf<HTMLButtonElement>;
   private format: HTMLSpanElement;
   private io: IO;
   private langSelector: HTMLSelectElement;
-  private markdownButton: HTMLInputElement;
+  private markdownButton: HTMLButtonElement;
   private mimeType: string = 'text/plain';
   private mimeTypeInput: HTMLInputElement;
-  private runButton: HTMLInputElement;
+  private runButton: HTMLButtonElement;
   private stderr: Renderers;
   private stdin: CodeMirror.Editor;
   private stdout: Renderers;
-  private stopButton: HTMLInputElement;
+  private stopButton: HTMLButtonElement;
 
   constructor() {
     this.langSelector = document.querySelector(
@@ -122,18 +122,20 @@ export class UI {
     );
 
     this.expanders = document.querySelectorAll(
-      'input[name="expand"]'
+      'button[name="expand"]'
     ) as NodeListOf<HTMLInputElement>;
     this.argsWrapper = document.querySelector(
       '.args-wrapper'
     ) as HTMLDivElement;
-    this.addArg = document.querySelector('.add-arg') as HTMLHeadingElement;
+    this.addArg = document.querySelector(
+      '.args-wrapper .actions'
+    ) as HTMLHeadingElement;
     this.runButton = document.querySelector(
-      'input[name="run"]'
-    ) as HTMLInputElement;
+      'button[name="run"]'
+    ) as HTMLButtonElement;
     this.stopButton = document.querySelector(
-      'input[name="stop"]'
-    ) as HTMLInputElement;
+      'button[name="stop"]'
+    ) as HTMLButtonElement;
     this.bytesCount = document.querySelector(
       '.bytes .byte-count'
     ) as HTMLSpanElement;
@@ -143,11 +145,11 @@ export class UI {
     this.encoded = document.querySelector('.encoded') as HTMLSpanElement;
     this.format = document.querySelector('.format') as HTMLSpanElement;
     this.copyLinkButton = document.querySelector(
-      'input[name="copy"]'
-    ) as HTMLInputElement;
+      'button[name="copy"]'
+    ) as HTMLButtonElement;
     this.markdownButton = document.querySelector(
-      'input[name="markdown"]'
-    ) as HTMLInputElement;
+      'button[name="markdown"]'
+    ) as HTMLButtonElement;
     this.mimeTypeInput = document.querySelector('.stdout-header input');
     this.connectExpanders();
 
@@ -381,10 +383,9 @@ export class UI {
       this.argsWrapper.removeAttribute('hidden');
 
       args.forEach((arg) => {
-        const argButton = document.createElement('input');
+        const argButton = document.createElement('button');
 
-        argButton.setAttribute('type', 'button');
-        argButton.setAttribute('value', arg);
+        argButton.append(document.createTextNode(arg));
 
         argButton.addEventListener('click', () => {
           const currentValue = this.io.getArgs() ?? '',
@@ -406,8 +407,8 @@ export class UI {
     this.io.argsRefresh();
   }
 
-  private static expand(expander: HTMLInputElement): void {
-    const collapser = expander.nextElementSibling,
+  private static expand(expander: HTMLButtonElement): void {
+    const collapser = expander.nextElementSibling as HTMLButtonElement,
       target = document.querySelector(expander.dataset.target);
 
     if (!target) {
@@ -419,9 +420,10 @@ export class UI {
     expander.setAttribute('hidden', '');
     target.removeAttribute('hidden');
     collapser.removeAttribute('hidden');
+    collapser.focus();
   }
 
-  private static collapse(expander: HTMLInputElement): void {
+  private static collapse(expander: HTMLButtonElement): void {
     const collapser = expander.nextElementSibling,
       target = document.querySelector(expander.dataset.target);
 
@@ -434,13 +436,14 @@ export class UI {
     expander.removeAttribute('hidden');
     target.setAttribute('hidden', '');
     collapser.setAttribute('hidden', '');
+    expander.focus();
   }
 
   private connectExpanders(): void {
     this.expanders.forEach((expander) => {
       const collapser = expander.nextElementSibling;
 
-      if (!collapser || !collapser.matches('input[name="collapse"]')) {
+      if (!collapser || !collapser.matches('button[name="collapse"]')) {
         console.debug('No collapser or target for expander: ', expander);
 
         return;
@@ -463,16 +466,14 @@ export class UI {
   }
 
   private static copied(button: HTMLButtonElement | HTMLInputElement): void {
-    const originalText = button.value;
-
     button.setAttribute('disabled', '');
     button.style.width = button.offsetWidth + 'px';
-    button.value = 'Copied!';
+    button.classList.toggle('copied');
 
     window.setTimeout(() => {
       button.removeAttribute('disabled');
       button.style.width = null;
-      button.value = originalText;
+      button.classList.toggle('copied');
     }, 1000);
   }
 

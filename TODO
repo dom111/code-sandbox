@@ -6,6 +6,8 @@
 - [X] Get commandline flags working again
 - [X] Using `location.hash`, store current state and create sharable URL
 - [X] Add CGCC snippet (including flags!)
+- [X] Add `Code` renderer to syntax highlight quines or other code output.
+- [X] Responsive view
 - [ ] Check a bunch of existing answers and fix what's broken
 - [ ] Verify `LICENSE`s before adding one here
 - [ ] Clean up the used `webperl` implementation (to make updating easier)
@@ -16,8 +18,6 @@
 - [ ] Add C#? (https://blazor.net/)
 - [ ] Maybe add bash via jslinux somehow? (https://bellard.org/jslinux/)
 - [ ] Accessibility (aria-label of all fields etc)
-- [ ] Responsive view
 - [ ] Add tests, especially for the decoders
 - [ ] Add `Inputs` renderer to replace the current inputs and args, similar to `Renderers`
-- [ ] Add `Code` renderer to syntax highlight quines or other code output.
 - [ ] Fix the mime selector as that has some undesirable behaviour when editing at the moment.
