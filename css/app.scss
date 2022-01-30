@@ -19,26 +19,21 @@ body {
 h1,
 h2,
 h3 {
-    display: flex;
-
-    > * {
-        margin-left: .5em;
-    }
-}
-
-h1,
-h2,
-h3 {
     select {
-        padding: 0 1em;
         border-radius: .25em;
+        padding: .5em 1em;
+        vertical-align: top;
     }
 
-    input[type="button"] {
+    button {
         background: var(--accent-color, #fff);
         border: 0;
-        border-radius: .25em;
-        padding: 0 1em;
+        border-right: 1px solid rgba(0, 0, 0, .4);
+        cursor: pointer;
+
+        &:hover {
+            background-image: linear-gradient(rgba(0, 0, 0, .2), rgba(0, 0, 0, .2));
+        }
 
         &:focus {
             box-shadow: 0 0 .5em var(--accent-color, #fff);
@@ -46,22 +41,74 @@ h3 {
 
         &[name="run"] {
             --accent-color: #a6e22e;
+
+            &::before {
+                content: '▶';
+            }
         }
 
         &[name="stop"] {
             --accent-color: #f92672;
+
+            &::before {
+                content: '■';
+            }
         }
 
         &[name="copy"] {
             --accent-color: #66d9ef;
+
+            &::before {
+                content: 'Copy Link';
+            }
         }
 
         &[name="markdown"] {
             --accent-color: #e6db74;
+
+            &::before {
+                content: 'Generate Markdown';
+            }
+        }
+
+        &[name="expand"],
+        &[name="collapse"] {
+            height: 1.7em;
+            width: 1.7em;
+        }
+
+        &[name="expand"]::before {
+            content: '+';
+        }
+
+        &[name="collapse"]::before {
+            content: '-';
         }
 
         &[disabled] {
+            cursor: default;
             opacity: .6;
+
+            &:hover {
+                background-image: none;
+            }
+        }
+
+        &.copied::before {
+            content: 'Copied!';
+        }
+    }
+
+    span button {
+        padding: .5em 1em;
+
+        &:first-child {
+            border-radius: .25em 0 0 .25em;
+        }
+
+        &:last-child {
+            border-radius: 0 .25em .25em 0;
+            border-right: 0;
         }
     }
 
@@ -69,10 +116,26 @@ h3 {
     &.code-footer {
         input[type="button"] {
             height: 1.5em;
-            padding: 0;
+            padding: .5em;
             width: 1.5em;
         }
     }
+}
+
+span.bytes,
+span.encoded {
+    font-size: 1rem;
+}
+
+span.encoded {
+    margin-left: .25em;
+}
+
+span.code-details,
+span.actions {
+    align-items: center;
+    display: flex;
+    margin: .5em 0;
 }
 
 .CodeMirror {
@@ -128,4 +191,42 @@ footer {
     font-size: .8em;
     margin-top: 1em;
     text-align: center;
+}
+
+@media (min-width: 525px) {
+}
+
+@media (min-width: 990px) {
+    h1,
+    h2,
+    h3 {
+        display: flex;
+
+        > * {
+            margin-left: .5em;
+        }
+
+        button {
+            &[name="run"]::before {
+                content: 'Run';
+            }
+
+            &[name="stop"]::before {
+                content: 'Stop';
+            }
+
+            &[name="copy"]::before {
+                content: 'Copy Link';
+            }
+
+            &[name="markdown"]::before {
+                content: 'Generate Markdown';
+            }
+        }
+    }
+
+    span.code-details,
+    span.actions {
+        margin: 0 .25em;
+    }
 }

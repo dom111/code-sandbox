@@ -3,6 +3,8 @@
 <head>
     <link rel="stylesheet" href="dist/css/app.css" />
 
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
     <title>Code Sandbox</title>
 </head>
 <body>
@@ -10,20 +12,26 @@
 
     <h1>
         Code Sandbox
-        <select name="lang" aria-label="Select target language"></select>
-        <span class="encoded" hidden>(<code class="format"></code>)</span>
-        <span class="bytes"><span class="byte-count">0</span> byte<span class="plural">s</span></span>
 
-        <input type="button" name="run" value="Run">
-        <input type="button" name="stop" value="Stop" disabled>
-        <input type="button" name="copy" value="Copy link">
-        <input type="button" name="markdown" value="Generate Markdown">
+        <select name="lang" aria-label="Select target language"></select>
+
+        <span class="code-details">
+            <span class="bytes"><span class="byte-count">0</span> byte<span class="plural">s</span></span>
+            <span class="encoded" hidden>(<code class="format"></code>)</span>
+        </span>
+
+        <span class="actions">
+            <button name="run" aria-label="Run"></button>
+            <button name="stop" aria-label="Stop" disabled></button>
+            <button name="copy" aria-label="Copy Link"></button>
+            <button name="markdown" aria-label="Generate Markdown"></button>
+        </span>
     </h1>
 
     <h3 class="code-header">
         Header
-        <input type="button" name="expand" data-target=".header" value="+" aria-label="Expand code header">
-        <input type="button" name="collapse" data-target=".header" value="-" hidden aria-label="Collapse code header">
+        <button name="expand" data-target=".header" aria-label="Expand code header"></button>
+        <button name="collapse" data-target=".header" hidden aria-label="Collapse code header"></button>
     </h3>
     <div class="header" hidden>
         <textarea name="header" placeholder="Header..." aria-labelledby=".code-header"></textarea>
@@ -34,18 +42,20 @@
 
     <h3 class="code-footer">
         Footer
-        <input type="button" name="expand" data-target=".footer" value="+" aria-label="Expand code footer">
-        <input type="button" name="collapse" data-target=".footer" value="-" hidden aria-label="Collapse code footer">
+        <button name="expand" data-target=".footer" aria-label="Expand code footer"></button>
+        <button name="collapse" data-target=".footer" hidden aria-label="Collapse code footer"></button>
     </h3>
     <div class="footer" hidden>
         <textarea name="footer" placeholder="Footer..."></textarea>
     </div>
 
     <div class="args-wrapper">
-        <h2 class="add-arg">
+        <h2>
             Arguments
+
+            <span class="actions" aria-label="Add command-line arguments"></span>
         </h2>
-        <textarea name="args" placeholder="Arguments..." aria-labelledby=".add-arg"></textarea>
+        <textarea name="args" placeholder="Arguments..." aria-label="Arguments (separated by newlines)"></textarea>
     </div>
 
     <h3 class="stdin-label">STDIN</h3>
@@ -53,7 +63,7 @@
 
     <h3 class="stdout-header">
         STDOUT
-        <input type="text" list="mimeTypes" placeholder="text/plain">
+        <input type="text" list="mimeTypes" placeholder="text/plain" aria-label="Enter MIME type">
         <datalist id="mimeTypes">
             <option value="application/javascript">
             <option value="application/json">
@@ -66,13 +76,13 @@
             <option value="image/svg+xml">
             <option value="image/vnd.microsoft.icon">
             <option value="image/webp">
+            <option value="image/x-portable-bitmap">
             <option value="text/html">
             <option value="text/plain">
             <option value="text/x-perl">
         </datalist>
     </h3>
-    <div class="stdout"></div>
-    <iframe class="html-out" src="data:text/html," hidden></iframe>
+    <div class="stdout" aria-label="STDOUT"></div>
 
     <h3 class="stderr-header">STDERR</h3>
     <div class="stderr" aria-labelledby=".stderr-header"></div>
