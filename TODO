@@ -19,5 +19,7 @@
 - [ ] Maybe add bash via jslinux somehow? (https://bellard.org/jslinux/)
 - [ ] Accessibility (aria-label of all fields etc)
 - [ ] Add tests, especially for the decoders
-- [ ] Add `Inputs` renderer to replace the current inputs and args, similar to `Renderers`
+- [ ] Add `Inputs` renderer to replace the current inputs and args, similar to `Renderers` (e.g. Piet)
 - [ ] Fix the mime selector as that has some undesirable behaviour when editing at the moment.
+- [ ] Complete `PBMImage` format support (P2 alternatives, and P7)
+- [ ] Graph renderer?
