@@ -3,8 +3,6 @@ import { decoders } from './Decoders';
 import Renderers from './Renderers';
 
 export class IO {
-  private htmlOutMimeType: string = 'text/html';
-
   constructor(
     private languageSelector: HTMLSelectElement,
     private header: Editor,

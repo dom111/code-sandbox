@@ -5,14 +5,17 @@ import Code from './Renderers/Code';
 import IFrame from './Renderers/IFrame';
 import IO from './IO';
 import Image from './Renderers/Image';
+import PBMImage from './Renderers/PBMImage';
 import TTY from './Renderers/TTY';
-import { decoders } from './Decoders';
 import { langs } from './Langs';
 
+import { decoders } from './Decoders';
+import 'codemirror/addon/comment/comment';
+import 'codemirror/addon/comment/continuecomment';
 import 'codemirror/addon/display/placeholder';
 import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/edit/matchbrackets';
-import PBMImage from './Renderers/PBMImage';
+import 'codemirror/keymap/sublime';
 
 export type IHashData = {
   lang: string;
@@ -161,7 +164,10 @@ export class UI {
     this.copyLinkButton.addEventListener('click', () => {
       const link = this.buildLink();
 
-      window.history.pushState(this.buildHashData(), document.title, link);
+      if (location.href !== link) {
+        history.pushState(this.buildHashData(), document.title, link);
+      }
+
       navigator.clipboard.writeText(link);
 
       UI.copied(this.copyLinkButton);
@@ -171,15 +177,20 @@ export class UI {
 
       UI.copied(this.markdownButton);
     });
-    this.mimeTypeInput.addEventListener('input', () =>
+    this.mimeTypeInput.addEventListener('change', () =>
       this.setMimeType(this.mimeTypeInput.value || 'text/plain', false)
     );
+    this.mimeTypeInput.addEventListener('keypress', ({ key }) => {
+      if (key === 'Enter' && this.mimeType !== this.mimeTypeInput.value) {
+        this.setMimeType(this.mimeTypeInput.value || 'text/plain', false);
+      }
+    });
 
-    window.addEventListener('keydown', (event) => {
+    addEventListener('keydown', (event) => {
       if (event.key === 's' && (event.ctrlKey || event.metaKey)) {
         const link = this.buildLink();
 
-        window.history.pushState(this.buildHashData(), document.title, link);
+        history.pushState(this.buildHashData(), document.title, link);
         navigator.clipboard.writeText(link);
 
         this.toast('Saved!', 'success', {
@@ -190,17 +201,17 @@ export class UI {
       }
     });
 
-    window.addEventListener('hashchange', () => {
-      this.parseHashData(window.location.hash);
+    addEventListener('hashchange', () => {
+      this.parseHashData(location.hash);
 
       if (this.io.getCodeAsArray().length) {
         this.runCode();
       }
     });
-    window.addEventListener('resize', () => this.resize());
+    addEventListener('resize', () => this.resize());
 
     // onload
-    this.parseHashData(window.location.hash);
+    this.parseHashData(location.hash);
     try {
       this.populateArgs();
     } catch (e) {
@@ -271,11 +282,15 @@ export class UI {
       mode: null,
       theme: 'monokai',
       viewportMargin: Infinity,
+      ...options,
       extraKeys: {
+        'Ctrl-D': 'duplicateLine',
+        'Ctrl-/': 'toggleComment',
         'Shift-Tab': false,
         Tab: false,
+        // @ts-ignore
+        ...(options.extraKeys || {}),
       },
-      ...options,
     });
   }
 
@@ -470,7 +485,7 @@ export class UI {
     button.style.width = button.offsetWidth + 'px';
     button.classList.toggle('copied');
 
-    window.setTimeout(() => {
+    setTimeout(() => {
       button.removeAttribute('disabled');
       button.style.width = null;
       button.classList.toggle('copied');
@@ -568,12 +583,7 @@ export class UI {
     const hash = this.buildHashData();
 
     return (
-      window.location.protocol +
-      '//' +
-      window.location.host +
-      window.location.pathname +
-      '#' +
-      hash
+      location.protocol + '//' + location.host + location.pathname + '#' + hash
     );
   }
 

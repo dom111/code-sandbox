@@ -1,4 +1,4 @@
-import Lang from './Lang';
+import Lang, { Runner } from './Lang';
 
 export class Langs {
   private data: { [key: string]: Lang } = {};
@@ -26,6 +26,21 @@ export class Langs {
     return this.data[langId].run(code, args, input);
   }
 }
+
+export const defaultRunner =
+  (workerURL): Runner =>
+  (code: number[], input: string, args: string) => {
+    const worker = new Worker(workerURL);
+
+    worker.postMessage({
+      type: 'run',
+      code,
+      args,
+      input,
+    });
+
+    return worker;
+  };
 
 export const langs = new Langs();
 
