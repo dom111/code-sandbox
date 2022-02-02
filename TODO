@@ -8,6 +8,7 @@
 - [X] Add CGCC snippet (including flags!)
 - [X] Add `Code` renderer to syntax highlight quines or other code output.
 - [X] Responsive view
+- [X] Fix the mime selector as that has some undesirable behaviour when editing at the moment.
 - [ ] Check a bunch of existing answers and fix what's broken
 - [ ] Verify `LICENSE`s before adding one here
 - [ ] Clean up the used `webperl` implementation (to make updating easier)
@@ -20,6 +21,5 @@
 - [ ] Accessibility (aria-label of all fields etc)
 - [ ] Add tests, especially for the decoders
 - [ ] Add `Inputs` renderer to replace the current inputs and args, similar to `Renderers` (e.g. Piet)
-- [ ] Fix the mime selector as that has some undesirable behaviour when editing at the moment.
 - [ ] Complete `PBMImage` format support (P2 alternatives, and P7)
 - [ ] Graph renderer?

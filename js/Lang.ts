@@ -1,8 +1,10 @@
+export type Runner = (code: number[], input: string, args: string) => Worker;
+
 export class Lang {
   constructor(
     private id: string,
     private name: string,
-    private runner: (code: number[], input: string, args: string) => Worker,
+    private runner: Runner,
     private url: string = null,
     private args: string[] | null = null,
     private highlighterRef: string = id
