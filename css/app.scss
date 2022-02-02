@@ -73,6 +73,7 @@ h3 {
 
         &[name="expand"],
         &[name="collapse"] {
+            border-right: 0;
             height: 1.7em;
             width: 1.7em;
         }
@@ -95,7 +96,7 @@ h3 {
         }
 
         &.copied::before {
-            content: 'Copied!';
+            content: 'Copied!' !important; // :(
         }
     }
 
