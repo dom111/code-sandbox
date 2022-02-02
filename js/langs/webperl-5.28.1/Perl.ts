@@ -1,4 +1,5 @@
 import { Lang } from '../../Lang';
+import { defaultRunner } from '../../Langs';
 import 'codemirror/mode/perl/perl';
 
 export class Perl extends Lang {
@@ -6,18 +7,7 @@ export class Perl extends Lang {
     super(
       'webperl-5.28.1',
       'Perl 5.28.1 (webperl)',
-      (code: number[], input: string, args: string): Worker => {
-        const worker = new Worker('dist/js/langs/webperl-5.28.1/worker.js');
-
-        worker.postMessage({
-          type: 'run',
-          code,
-          args,
-          input,
-        });
-
-        return worker;
-      },
+      defaultRunner('dist/js/langs/webperl-5.28.1/worker.js'),
       'https://www.perl.org/',
       ['-M5.10.0', '-F', '-l', '-p'],
       'perl'

@@ -1,4 +1,5 @@
 import { Lang } from '../../Lang';
+import { defaultRunner } from '../../Langs';
 import 'codemirror/mode/javascript/javascript';
 
 export class JavaScript extends Lang {
@@ -6,18 +7,7 @@ export class JavaScript extends Lang {
     super(
       'javascript-browser',
       'JavaScript (Browser)',
-      (code: number[], input: string, args: string): Worker => {
-        const worker = new Worker('dist/js/langs/javascript-browser/worker.js');
-
-        worker.postMessage({
-          type: 'run',
-          code,
-          args,
-          input,
-        });
-
-        return worker;
-      },
+      defaultRunner('dist/js/langs/javascript-browser/worker.js'),
       'https://www.ecma-international.org/publications-and-standards/standards/ecma-262/',
       null,
       'javascript'
