@@ -20,9 +20,11 @@ export class Renderers {
     this.registered.reduce((value, renderer): boolean => {
       // Activate the first Renderer that matches
       if (renderer.matches(mimeType) && !value) {
-        renderer.activate(mimeType);
-        renderer.reset();
-        renderer.write(this.buffer);
+        if (!renderer.isActive()) {
+          renderer.activate(mimeType);
+          renderer.reset();
+          renderer.write(this.buffer);
+        }
 
         return true;
       }
