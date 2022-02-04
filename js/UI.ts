@@ -1,7 +1,8 @@
 import { Editor, EditorConfiguration, fromTextArea } from 'codemirror';
 import { Melba, MelbaConstructorOptions, MelbaType } from 'melba-toast';
 import { Renderers, createDevice } from './Renderers';
-import Code from './Renderers/Code';
+import CodeRenderer from './Renderers/Code';
+import CodeInput from './Inputs/Code';
 import IFrame from './Renderers/IFrame';
 import IO from './IO';
 import Image from './Renderers/Image';
@@ -16,6 +17,7 @@ import 'codemirror/addon/display/placeholder';
 import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/edit/matchbrackets';
 import 'codemirror/keymap/sublime';
+import { Inputs } from './Inputs';
 
 export type IHashData = {
   lang: string;
@@ -34,9 +36,9 @@ export class UI {
   private argsWrapper: HTMLDivElement;
   private bytesCount: HTMLSpanElement;
   private bytesPlural: HTMLSpanElement;
-  private code: CodeMirror.Editor;
-  private codeFooter: CodeMirror.Editor;
-  private codeHeader: CodeMirror.Editor;
+  private code: Inputs;
+  private codeFooter: Inputs;
+  private codeHeader: Inputs;
   private copyLinkButton: HTMLButtonElement;
   private encoded: HTMLSpanElement;
   private expanders: NodeListOf<HTMLButtonElement>;
@@ -63,8 +65,42 @@ export class UI {
       'div.stdout'
     ) as HTMLDivElement;
 
+    this.codeHeader = new Inputs(
+      new CodeInput(document.querySelector('div.header') as HTMLDivElement, {
+        autoCloseBrackets: true,
+        matchBrackets: true,
+        placeholder: 'Header...',
+      })
+    );
+    this.codeHeader.activate(CodeInput);
+
+    this.code = new Inputs(
+      new CodeInput(document.querySelector('div.code') as HTMLDivElement, {
+        autoCloseBrackets: true,
+        autofocus: true,
+        matchBrackets: true,
+        placeholder: 'Code...',
+      })
+    );
+    this.code.activate(CodeInput);
+    this.code.setType(this.langSelector.value);
+
+    this.langSelector.addEventListener('change', () =>
+      this.code.setType(this.langSelector.value)
+    );
+
+    this.codeFooter = new Inputs(
+      new CodeInput(document.querySelector('div.footer') as HTMLDivElement, {
+        autoCloseBrackets: true,
+        autofocus: true,
+        matchBrackets: true,
+        placeholder: 'Footer...',
+      })
+    );
+    this.codeFooter.activate(CodeInput);
+
     this.stdout = createDevice(
-      new Code(stdoutContainer),
+      new CodeRenderer(stdoutContainer),
       new PBMImage(stdoutContainer),
       new Image(stdoutContainer),
       new IFrame(stdoutContainer),
@@ -81,31 +117,6 @@ export class UI {
       })
     );
     this.stderr.activate('text/plain');
-
-    this.codeHeader = UI.createEditor(
-      document.querySelector('textarea[name="header"]') as HTMLTextAreaElement,
-      {
-        autoCloseBrackets: true,
-        autofocus: true,
-        matchBrackets: true,
-      }
-    );
-    this.code = UI.createEditor(
-      document.querySelector('textarea[name="code"]') as HTMLTextAreaElement,
-      {
-        autoCloseBrackets: true,
-        autofocus: true,
-        matchBrackets: true,
-      }
-    );
-    this.codeFooter = UI.createEditor(
-      document.querySelector('textarea[name="footer"]') as HTMLTextAreaElement,
-      {
-        autoCloseBrackets: true,
-        autofocus: true,
-        matchBrackets: true,
-      }
-    );
     this.stdin = UI.createEditor(
       document.querySelector('textarea[name="input"]') as HTMLTextAreaElement
     );
@@ -115,9 +126,6 @@ export class UI {
 
     this.io = new IO(
       this.langSelector,
-      this.codeHeader,
-      this.code,
-      this.codeFooter,
       this.stdin,
       this.stdout,
       this.stderr,
@@ -157,7 +165,7 @@ export class UI {
     this.connectExpanders();
 
     // bind events
-    this.io.onCodeChange(() => this.codeOnChange());
+    this.code.on('change', () => this.codeOnChange());
 
     this.runButton.addEventListener('click', () => this.runCode());
     this.langSelector.addEventListener('change', () => this.populateArgs());
@@ -204,7 +212,7 @@ export class UI {
     addEventListener('hashchange', () => {
       this.parseHashData(location.hash);
 
-      if (this.io.getCodeAsArray().length) {
+      if (this.code.read().length) {
         this.runCode();
       }
     });
@@ -219,7 +227,7 @@ export class UI {
     }
     this.codeOnChange();
 
-    if (this.io.getCodeAsArray().length) {
+    if (this.code.read().length) {
       this.runCode();
     }
 
@@ -257,20 +265,16 @@ export class UI {
   private setCodeHighlight(): void {
     const lang = langs.get(this.getLangId());
 
-    [this.codeHeader, this.code, this.codeFooter].forEach((editor) => {
-      const decoder = decoders.decoder(IO.getRaw(editor));
+    [this.codeHeader, this.code, this.codeFooter].forEach((inputs) => {
+      const decoder = decoders.decoder(inputs.readAsString(null));
 
       if (decoder.name() !== 'default') {
-        if (editor.getOption('mode') !== null) {
-          editor.setOption('mode', null);
-        }
+        inputs.setType(null);
 
         return;
       }
 
-      if (editor.getOption('mode') !== lang.getHighlighterRef()) {
-        editor.setOption('mode', lang.getHighlighterRef());
-      }
+      inputs.setType(lang.getHighlighterRef());
     });
   }
 
@@ -300,13 +304,13 @@ export class UI {
   }
 
   private codeOnChange(): void {
-    const code = this.io.getCodeAsArray();
+    const code = this.code.read();
 
     this.encoded.setAttribute('hidden', '');
 
     this.setCodeHighlight();
 
-    const decoder = decoders.decoder(this.io.getRawCode());
+    const decoder = decoders.decoder(this.code.readAsString(null));
 
     if (decoder.name() !== 'default') {
       this.encoded.removeAttribute('hidden');
@@ -322,9 +326,7 @@ export class UI {
       stopHandler = () => {
         worker.terminate();
 
-        this.io.writeStderr(
-          `Aborted execution after ${Date.now() - started}ms`
-        );
+        this.stderr.write(`Aborted execution after ${Date.now() - started}ms`);
 
         this.runButton.removeAttribute('disabled');
         this.stopButton.setAttribute('disabled', '');
@@ -332,15 +334,19 @@ export class UI {
         this.stopButton.removeEventListener('click', stopHandler);
       };
 
-    this.io.clearStdout();
-    this.io.clearStderr();
+    this.stdout.reset();
+    this.stderr.reset();
 
     this.runButton.setAttribute('disabled', '');
     this.stopButton.removeAttribute('disabled');
 
     const worker = langs.run(
       this.getLangId(),
-      this.io.getFullCodeAsArray(),
+      [].concat(
+        this.codeHeader.read(),
+        this.code.read(),
+        this.codeFooter.read()
+      ),
       this.io.getArgs(),
       this.io.getStdin()
     );
@@ -351,15 +357,15 @@ export class UI {
       const { type, output, error } = data;
 
       if (output) {
-        this.io.writeStdout(output);
+        this.stdout.write(output);
       }
 
       if (error) {
-        this.io.writeStderr(error ?? '');
+        this.stderr.write(error ?? '');
       }
 
       if (type === 'done') {
-        this.io.writeStderr(
+        this.stderr.write(
           `Completed execution after ${Date.now() - started}ms`
         );
 
@@ -528,20 +534,16 @@ export class UI {
 
     if (data.header) {
       UI.expand(headerExpander);
-    } else {
-      UI.collapse(headerExpander);
     }
 
     if (data.footer) {
       UI.expand(footerExpander);
-    } else {
-      UI.collapse(footerExpander);
     }
 
     this.setLang(data.lang ?? this.getLangId());
-    this.io.setCodeHeader(data.header ?? '');
-    this.io.setCode(data.code ?? '');
-    this.io.setCodeFooter(data.footer ?? '');
+    this.codeHeader.write(data.header ?? '');
+    this.code.write(data.code ?? '');
+    this.codeFooter.write(data.footer ?? '');
     this.io.setArgs(data.args ?? '');
     this.io.setStdin(data.input ?? '');
 
@@ -553,10 +555,10 @@ export class UI {
   private buildHashData() {
     const data: IHashData = {
         lang: this.getLangId(),
-        code: this.io.getRawCode(),
+        code: this.code.readAsString(null),
       },
-      header = this.io.getRawCodeHeader(),
-      footer = this.io.getRawCodeFooter(),
+      header = this.codeHeader.readAsString(null),
+      footer = this.codeFooter.readAsString(null),
       args = this.io.getArgs(),
       input = this.io.getStdin(),
       mime = this.mimeType;
@@ -591,7 +593,7 @@ export class UI {
     const args = this.io.getArgs().trim().split(/\n/).join(' '),
       lang = langs.get(this.getLangId()),
       key = Math.random().toString(36).slice(2, 10),
-      bytes = this.io.getCodeAsArray().length;
+      bytes = this.code.read().length;
 
     return `# [${lang.getName()}]${
       args ? ` + \`${args}\`` : ''
@@ -599,8 +601,8 @@ export class UI {
 
 <!-- language-all: lang-${lang.getHighlighterRef()} -->
 
-<pre><code>${this.io
-      .getCodeAsString()
+<pre><code>${this.code
+      .readAsString()
       .replace(/[&<>]/g, (char) =>
         char === '<'
           ? '&lt;'

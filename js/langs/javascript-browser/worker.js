@@ -9,7 +9,7 @@ addEventListener('message', ({ data }) => {
   console.log = (...data) => {
     postMessage({
       type: 'output',
-      output: data.join(''),
+      output: data.join('') + '\n',
     });
   };
 
@@ -20,21 +20,19 @@ addEventListener('message', ({ data }) => {
       (...data) => {
         postMessage({
           type: 'output',
-          error: data.join(''),
+          error: data.join('') + '\n',
         });
       };
 
   let result;
 
   try {
-    // result = eval(String.fromCharCode(...code));
     result = eval(code.map((char) => String.fromCharCode(char)).join(''));
 
     if (result instanceof Function) {
       result = result(input);
     }
   } catch (e) {
-    debugger;
     postMessage({
       type: 'output',
       error: e.message,
