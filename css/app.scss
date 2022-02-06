@@ -182,6 +182,50 @@ span.actions {
     }
 }
 
+.hex-editor {
+    border: 1px solid rgba(248, 248, 242, .3);
+    cursor: text;
+    display: flex;
+    padding: .25em;
+
+    &[hidden] {
+        display: none;
+    }
+
+    &:focus,
+    &:focus-within {
+        border-color: #a6e22e;
+    }
+
+    pre,
+    textarea {
+        background: none;
+        border: 0;
+        color: #fff;
+        height: 100%;
+        margin: 0;
+        resize: none;
+
+        &:active,
+        &:focus {
+            border: none;
+            outline: none;
+        }
+    }
+
+    textarea.gutter {
+        width: 6em;
+    }
+
+    textarea.hex-input {
+        width: 25em;
+    }
+
+    textarea.text-input {
+        word-break: break-all;
+    }
+}
+
 iframe {
     border: 1px solid rgba(248, 248, 242, .3);
     height: 25em;

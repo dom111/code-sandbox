@@ -18,6 +18,7 @@ import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/edit/matchbrackets';
 import 'codemirror/keymap/sublime';
 import { Inputs } from './Inputs';
+import HexEditor from './Inputs/HexEditor';
 
 export type IHashData = {
   lang: string;
@@ -80,9 +81,10 @@ export class UI {
         autofocus: true,
         matchBrackets: true,
         placeholder: 'Code...',
-      })
+      }),
+      new HexEditor(document.querySelector('div.code') as HTMLDivElement)
     );
-    this.code.activate(CodeInput);
+    this.code.activate(HexEditor);
     this.code.setType(this.langSelector.value);
 
     this.langSelector.addEventListener('change', () =>
