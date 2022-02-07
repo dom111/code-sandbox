@@ -1,13 +1,16 @@
 import Abstract from './Abstract';
 import { Input } from '../Inputs';
 
-type SelectionDetails = [number, number, string?];
+type SelectionDetails = [number, number];
 type UndoStackEntry = {
-  undo: () => void;
+  delete: boolean;
   redo: () => void;
+  simple: boolean;
+  undo: () => void;
 };
 
 export type HexEditorOptions = {
+  combineSimpleUndo?: boolean;
   maxUndoLevel?: number;
 };
 
@@ -18,13 +21,14 @@ export class HexEditor extends Abstract implements Input {
   private hexEditor: HTMLTextAreaElement;
   private options: HexEditorOptions = {};
   private textEditor: HTMLTextAreaElement;
-  private undoPosition: number = 0;
   private undoBuffer: UndoStackEntry[] = [];
+  private undoPosition: number = 0;
 
   public constructor(parent: HTMLElement, options: HexEditorOptions = {}) {
     super();
 
     this.options = {
+      combineSimpleUndo: true,
       maxUndoLevel: 100,
       ...options,
     };
@@ -115,7 +119,7 @@ export class HexEditor extends Abstract implements Input {
             : [start, end]
         );
 
-        this.textEditor.setSelectionRange(start, start, 'forward');
+        this.setSelection(this.textEditor, start);
 
         event.preventDefault();
 
@@ -127,7 +131,7 @@ export class HexEditor extends Abstract implements Input {
 
         this.deleteWord(key === 'Delete' ? 'forward' : 'backward');
 
-        this.textEditor.setSelectionRange(start, start, 'forward');
+        this.setSelection(this.textEditor, start);
 
         event.preventDefault();
 
@@ -160,6 +164,70 @@ export class HexEditor extends Abstract implements Input {
 
       event.preventDefault();
     });
+
+    // TODO: debounce?
+    [this.gutter, this.hexEditor, this.textEditor].forEach((target) =>
+      target.addEventListener('scroll', () =>
+        [this.gutter, this.hexEditor, this.textEditor].forEach((element) => {
+          if (element === target) {
+            return;
+          }
+
+          element.scrollTop = target.scrollTop;
+        })
+      )
+    );
+  }
+
+  private addUndo({
+    delete: isDelete,
+    redo,
+    simple,
+    undo,
+  }: UndoStackEntry): void {
+    if (this.undoPosition < this.undoBuffer.length) {
+      this.undoBuffer.splice(
+        this.undoPosition,
+        this.undoBuffer.length - this.undoPosition
+      );
+    }
+
+    if (this.undoBuffer.length >= this.options.maxUndoLevel) {
+      this.undoBuffer.shift();
+      this.undoPosition--;
+    }
+
+    const previous =
+      this.undoPosition > 0 ? this.undoBuffer[this.undoPosition - 1] : null;
+
+    if (
+      this.undoPosition === 0 ||
+      !this.options.combineSimpleUndo ||
+      !simple ||
+      !previous ||
+      !previous.simple ||
+      !previous.delete === isDelete
+    ) {
+      this.undoBuffer.push({ delete: isDelete, redo, simple, undo });
+      this.undoPosition++;
+
+      return;
+    }
+
+    const { undo: previousUndo, redo: previousRedo } = this.undoBuffer.pop();
+
+    this.undoBuffer.push({
+      delete: isDelete,
+      redo: () => {
+        previousRedo();
+        redo();
+      },
+      simple,
+      undo: () => {
+        undo();
+        previousUndo();
+      },
+    });
   }
 
   private addValue(char: string | number): void {
@@ -183,43 +251,14 @@ export class HexEditor extends Abstract implements Input {
       return [-1, -1];
     }
 
-    const start = active.selectionStart,
-      end = active.selectionEnd;
+    const isTextArea = active instanceof HTMLTextAreaElement,
+      selection = getSelection(),
+      range = selection.getRangeAt(0);
 
-    return [
-      start < end ? start : end,
-      start < end ? end : start,
-      active.selectionDirection,
-    ];
-  }
+    const start = isTextArea ? active.selectionStart : range.startOffset,
+      end = isTextArea ? active.selectionEnd : range.endOffset;
 
-  private spliceBuffer(
-    replacement: number[] = [],
-    range: SelectionDetails = this.currentSelection()
-  ): void {
-    const [start, end] = range;
-
-    if (start === -1 || end === -1) {
-      return;
-    }
-
-    const deletedChars = this.buffer.slice(start, end);
-
-    this.buffer.splice(start, end - start, ...replacement);
-
-    const redo = () => this.buffer.splice(start, end - start, ...replacement),
-      undo = () =>
-        this.buffer.splice(start, replacement.length, ...deletedChars);
-
-    this.addUndo(
-      {
-        undo,
-        redo,
-      },
-      start === end && replacement.length === 1
-    );
-
-    this.updateDisplay();
+    return [start < end ? start : end, start < end ? end : start];
   }
 
   private deleteWord(direction: 'forward' | 'backward'): void {
@@ -275,43 +314,6 @@ export class HexEditor extends Abstract implements Input {
     );
   }
 
-  private addUndo(
-    { undo, redo }: UndoStackEntry,
-    combineWithPrevious: boolean = false
-  ): void {
-    if (this.undoPosition < this.undoBuffer.length) {
-      this.undoBuffer.splice(
-        this.undoPosition,
-        this.undoBuffer.length - this.undoPosition
-      );
-    }
-
-    if (this.undoBuffer.length >= this.options.maxUndoLevel) {
-      this.undoBuffer.shift();
-      this.undoPosition--;
-    }
-
-    if (!combineWithPrevious || this.undoPosition === 0) {
-      this.undoBuffer.push({ undo, redo });
-      this.undoPosition++;
-
-      return;
-    }
-
-    const { undo: previousUndo, redo: previousRedo } = this.undoBuffer.pop();
-
-    this.undoBuffer.push({
-      undo: () => {
-        undo();
-        previousUndo();
-      },
-      redo: () => {
-        previousRedo();
-        redo();
-      },
-    });
-  }
-
   private performRedo(): void {
     if (this.undoPosition >= this.undoBuffer.length) {
       return;
@@ -359,10 +361,44 @@ export class HexEditor extends Abstract implements Input {
     this.updateDisplay();
   }
 
+  private setSelection(target, start): void {
+    target.setSelectionRange(start, start, 'forward');
+  }
+
   public setType(type: string | null): void {}
 
-  public write(data: string | number[]): void {
-    // TODO: Encode
+  private spliceBuffer(
+    replacement: number[] = [],
+    range: SelectionDetails = this.currentSelection()
+  ): void {
+    const [start, end] = range,
+      deletedChars = this.buffer.slice(start, end);
+
+    if (
+      start === -1 ||
+      end === -1 ||
+      start > this.buffer.length ||
+      (deletedChars.length === 0 && replacement.length === 0)
+    ) {
+      return;
+    }
+
+    this.buffer.splice(start, end - start, ...replacement);
+
+    const redo = () => this.buffer.splice(start, end - start, ...replacement),
+      undo = () =>
+        this.buffer.splice(start, replacement.length, ...deletedChars);
+
+    this.addUndo({
+      delete: replacement.length === 0,
+      redo,
+      simple:
+        (start === end && replacement.length === 1) ||
+        (Math.abs(start - end) === 1 && replacement.length === 0),
+      undo,
+    });
+
+    this.updateDisplay();
   }
 
   private updateDisplay(): void {
@@ -396,6 +432,10 @@ export class HexEditor extends Abstract implements Input {
     this.gutter.rows = rows;
     this.hexEditor.rows = rows;
     this.textEditor.rows = rows;
+  }
+
+  public write(data: string | number[]): void {
+    // TODO: Encode
   }
 }
 

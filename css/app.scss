@@ -186,6 +186,7 @@ span.actions {
     border: 1px solid rgba(248, 248, 242, .3);
     cursor: text;
     display: flex;
+    max-height: 50vh;
     padding: .25em;
 
     &[hidden] {
