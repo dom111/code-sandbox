@@ -7,8 +7,9 @@ import UI from './UI';
 import Xxd from './Decoders/Xxd';
 import { decoders } from './Decoders';
 import { langs } from './Langs';
+import Python from './langs/python-wapm/Python';
 
 decoders.register(new Xxd(), new Hexdump(), new Base64(), new Default());
-langs.register(new JavaScript(), new Perl());
+langs.register(new JavaScript(), new Perl(), new Python());
 
 const ui = new UI();

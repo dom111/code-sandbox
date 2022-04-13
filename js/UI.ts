@@ -374,6 +374,18 @@ export class UI {
         this.stderr.write(error ?? '');
       }
 
+      if (type === 'failed') {
+        this.stderr.write(`\nFailed execution after ${Date.now() - started}ms`);
+
+        this.runButton.removeAttribute('disabled');
+        this.stopButton.setAttribute('disabled', '');
+
+        this.stopButton.removeEventListener('click', stopHandler);
+
+        // Make sure the process is stopped
+        worker.terminate();
+      }
+
       if (type === 'done') {
         this.stderr.write(
           `Completed execution after ${Date.now() - started}ms`

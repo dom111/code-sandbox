@@ -1,0 +1,21 @@
+[package]
+name = "code-sandbox"
+version = "0.1.2"
+description = "Code Sandbox - run code online via WASM"
+license = "MIT"
+readme = "README.md"
+repository = "git+https://github.com/dom111/code-sandbox.git"
+
+[dependencies]
+"php/php" = "0.1.1"
+"python/python" = "0.1.0"
+"rustpython/rustpython" = "0.1.3"
+
+[[module]]
+name = "entry"
+source = "entry.wasm"
+abi = "emscripten"
+
+[[command]]
+name = "entry"
+module = "entry"
