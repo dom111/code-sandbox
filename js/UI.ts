@@ -232,6 +232,12 @@ export class UI {
     }
 
     this.resize();
+
+    document
+      .querySelector('button.fullscreen-toggle')
+      .addEventListener('click', () => this.enterFullscreen());
+
+    document.addEventListener('fullscreenchange', () => this.exitFullscreen());
   }
 
   private addRegisteredLangs(): void {
@@ -266,7 +272,7 @@ export class UI {
     const lang = langs.get(this.getLangId());
 
     [this.codeHeader, this.code, this.codeFooter].forEach((inputs) => {
-      const decoder = decoders.decoder(inputs.readAsString(null));
+      const decoder = decoders.decoderAsString(inputs.readAsString(null));
 
       if (decoder.name() !== 'default') {
         inputs.setType(null);
@@ -310,7 +316,7 @@ export class UI {
 
     this.setCodeHighlight();
 
-    const decoder = decoders.decoder(this.code.readAsString(null));
+    const decoder = decoders.decoder(code);
 
     if (decoder.name() !== 'default') {
       this.encoded.removeAttribute('hidden');
@@ -318,7 +324,9 @@ export class UI {
       this.format.innerText = decoder.name();
     }
 
-    this.showBytes(code.length);
+    const decodedCode = decoder.decode(code);
+
+    this.showBytes(decodedCode.length);
   }
 
   private runCode(): void {
@@ -343,9 +351,11 @@ export class UI {
     const worker = langs.run(
       this.getLangId(),
       [].concat(
-        this.codeHeader.read(),
-        this.code.read(),
-        this.codeFooter.read()
+        [
+          this.codeHeader.read(),
+          this.code.read(),
+          this.codeFooter.read(),
+        ].flatMap((code) => decoders.decode(code))
       ),
       this.io.getArgs(),
       this.io.getStdin()
@@ -593,7 +603,7 @@ export class UI {
     const args = this.io.getArgs().trim().split(/\n/).join(' '),
       lang = langs.get(this.getLangId()),
       key = Math.random().toString(36).slice(2, 10),
-      bytes = this.code.read().length;
+      bytes = decoders.decode(this.code.read()).length;
 
     return `# [${lang.getName()}]${
       args ? ` + \`${args}\`` : ''
@@ -629,6 +639,18 @@ export class UI {
     }
 
     this.bytesPlural.removeAttribute('hidden');
+  }
+
+  private enterFullscreen(): void {
+    document.body.requestFullscreen().then(() => {
+      document.body.classList.add('fullscreen');
+      this.resize();
+    });
+  }
+
+  private exitFullscreen(): void {
+    document.body.classList.remove('fullscreen');
+    this.resize();
   }
 
   public toast(

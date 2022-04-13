@@ -1,15 +1,16 @@
 import { Decoder } from '../Decoders';
+import Default from './Default';
 
-export class Hexdump implements Decoder {
+export class Hexdump extends Default implements Decoder {
   public name(): string {
     return 'hexdump';
   }
 
-  public matches(code: string): boolean {
+  public matchesAsString(code: string): boolean {
     return /^(\d{7} (((.{2}){1,2} ){1,8})(\n|$))+$/.test(code);
   }
 
-  public decode(code: string): number[] {
+  public decodeAsString(code: string): number[] {
     return code
       .trim()
       .replace(/(?<=^|\n)\d{7} (((.{2}){1,2} ){1,8}).+/g, '$1')
