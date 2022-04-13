@@ -53,6 +53,7 @@ body > img {
   appearance: none;
   background: transparent;
   border: 0;
+  cursor: pointer;
 }
 
 .controls button.toggle:after {
@@ -88,14 +89,14 @@ body > img {
 <img src="data:${this.imageMimeType};base64,${btoa(this.imageBuffer)}">
 <div class="controls">
   <header>
-    <button class="toggle"></button>
+    <button class="toggle" title="Toggle position"></button>
   </header>
   <section>
-    <button class="zoom-in"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTMgMTBoLTN2M2gtMnYtM2gtM3YtMmgzdi0zaDJ2M2gzdjJ6bTguMTcyIDE0bC03LjM4Ny03LjM4N2MtMS4zODguODc0LTMuMDI0IDEuMzg3LTQuNzg1IDEuMzg3LTQuOTcxIDAtOS00LjAyOS05LTlzNC4wMjktOSA5LTkgOSA0LjAyOSA5IDljMCAxLjc2MS0uNTE0IDMuMzk4LTEuMzg3IDQuNzg1bDcuMzg3IDcuMzg3LTIuODI4IDIuODI4em0tMTIuMTcyLThjMy44NTkgMCA3LTMuMTQgNy03cy0zLjE0MS03LTctNy03IDMuMTQtNyA3IDMuMTQxIDcgNyA3eiIvPjwvc3ZnPg=="></button>
-    <button class="zoom-out"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTMgMTBoLTh2LTJoOHYyem04LjE3MiAxNGwtNy4zODctNy4zODdjLTEuMzg4Ljg3NC0zLjAyNCAxLjM4Ny00Ljc4NSAxLjM4Ny00Ljk3MSAwLTktNC4wMjktOS05czQuMDI5LTkgOS05IDkgNC4wMjkgOSA5YzAgMS43NjEtLjUxNCAzLjM5OC0xLjM4NyA0Ljc4NWw3LjM4NyA3LjM4Ny0yLjgyOCAyLjgyOHptLTEyLjE3Mi04YzMuODU5IDAgNy0zLjE0IDctN3MtMy4xNDEtNy03LTctNyAzLjE0LTcgNyAzLjE0MSA3IDcgN3oiLz48L3N2Zz4="></button>
+    <button class="zoom-in" title="Zoom in"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTMgMTBoLTN2M2gtMnYtM2gtM3YtMmgzdi0zaDJ2M2gzdjJ6bTguMTcyIDE0bC03LjM4Ny03LjM4N2MtMS4zODguODc0LTMuMDI0IDEuMzg3LTQuNzg1IDEuMzg3LTQuOTcxIDAtOS00LjAyOS05LTlzNC4wMjktOSA5LTkgOSA0LjAyOSA5IDljMCAxLjc2MS0uNTE0IDMuMzk4LTEuMzg3IDQuNzg1bDcuMzg3IDcuMzg3LTIuODI4IDIuODI4em0tMTIuMTcyLThjMy44NTkgMCA3LTMuMTQgNy03cy0zLjE0MS03LTctNy03IDMuMTQtNyA3IDMuMTQxIDcgNyA3eiIvPjwvc3ZnPg=="></button>
+    <button class="zoom-out" title="Zoom out"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTMgMTBoLTh2LTJoOHYyem04LjE3MiAxNGwtNy4zODctNy4zODdjLTEuMzg4Ljg3NC0zLjAyNCAxLjM4Ny00Ljc4NSAxLjM4Ny00Ljk3MSAwLTktNC4wMjktOS05czQuMDI5LTkgOS05IDkgNC4wMjkgOSA5YzAgMS43NjEtLjUxNCAzLjM5OC0xLjM4NyA0Ljc4NWw3LjM4NyA3LjM4Ny0yLjgyOCAyLjgyOHptLTEyLjE3Mi04YzMuODU5IDAgNy0zLjE0IDctN3MtMy4xNDEtNy03LTctNyAzLjE0LTcgNyAzLjE0MSA3IDcgN3oiLz48L3N2Zz4="></button>
   </section>
   <section>
-    <button class="checked">&#x2580;&#x2584;</button>
+    <button class="checked" title="Toggle transparency checkerboard">&#x2580;&#x2584;</button>
   </section>
 </div>
 <script>${this.js()}</script>

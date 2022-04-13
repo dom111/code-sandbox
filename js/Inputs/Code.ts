@@ -68,7 +68,8 @@ export class Code extends Abstract implements Input {
       return code;
     }
 
-    return code.replace(/[\x00-\x1f\x7f-\xff]/g, replaceBinaryBytes);
+    // Don't replace newlines
+    return code.replace(/[\x00-\x09\x0b-\x1f\x7f-\xff]/g, replaceBinaryBytes);
   }
 
   public reset(): void {
