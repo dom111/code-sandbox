@@ -141,7 +141,7 @@ export class PBMImage extends Image implements Renderer {
       data = this.asciiDataGenerator(offset, false);
 
     for (let index = 0; index < width * height * 4; ) {
-      const value = data.next().value ? 0 : 255;
+      const value = data.next().value === 1 ? 0 : 255;
 
       imageData.data[index++] = value;
       imageData.data[index++] = value;
@@ -212,27 +212,15 @@ export class PBMImage extends Image implements Renderer {
 
   private parseP4(width: number, height: number, offset: number): string {
     const [canvas, context, imageData] = this.createCanvas(width, height),
-      data = this.binaryDataGenerator(offset);
+      data = this.binaryBitDataGenerator(offset);
 
     for (let index = 0; index < width * height * 4; ) {
-      let row = '';
+      const value = data.next().value === 1 ? 0 : 255;
 
-      for (
-        let rowCounter = 0;
-        rowCounter < Math.ceil(width / 8);
-        rowCounter++
-      ) {
-        row += ('00000000' + data.next().value.toString(2)).slice(-8);
-      }
-
-      for (let pixel = 0; pixel < width; pixel++) {
-        const colour = row[pixel] === '1' ? 0 : 255;
-
-        imageData.data[index++] = colour;
-        imageData.data[index++] = colour;
-        imageData.data[index++] = colour;
-        imageData.data[index++] = 255;
-      }
+      imageData.data[index++] = value;
+      imageData.data[index++] = value;
+      imageData.data[index++] = value;
+      imageData.data[index++] = 255;
     }
 
     context.putImageData(imageData, 0, 0, 0, 0, width, height);
@@ -341,6 +329,25 @@ export class PBMImage extends Image implements Renderer {
       const currentChar = this.ppmBuffer[currentPosition];
 
       yield currentChar.charCodeAt(0);
+    }
+
+    yield parseInt(block, 10);
+  }
+
+  private *binaryBitDataGenerator(offset: number): Generator<number> {
+    let block = '';
+
+    for (
+      let currentPosition = offset;
+      currentPosition < this.ppmBuffer.length;
+      currentPosition++
+    ) {
+      const currentChar = this.ppmBuffer[currentPosition],
+        bitMask = ('0000000' + currentChar.charCodeAt(0).toString(2)).slice(-8);
+
+      for (let rowPosition = 0; rowPosition < 8; rowPosition++) {
+        yield parseInt(bitMask[rowPosition], 10);
+      }
     }
 
     yield parseInt(block, 10);
