@@ -13,10 +13,7 @@ const { build } = require('esbuild'),
     sourcemap: true,
     watch: false,
     outdir: 'dist',
-    plugins: [
-        sassPlugin(),
-        new Prettier(),
-    ],
+    plugins: [sassPlugin(), new Prettier()],
     entryNames: '[dir]/[name]',
   };
 

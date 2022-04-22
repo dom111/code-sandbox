@@ -66,6 +66,8 @@ export class TTY extends Abstract implements Renderer {
 
   private static createTerminal(options: ITerminalOptions = {}): Terminal {
     return new Terminal({
+      disableStdin: true,
+      screenReaderMode: true,
       ...options,
       theme: {
         background: '#272822',
