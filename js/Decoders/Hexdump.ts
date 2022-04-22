@@ -7,13 +7,17 @@ export class Hexdump extends Default implements Decoder {
   }
 
   public matchesAsString(code: string): boolean {
-    return /^(\d{7} (((.{2}){1,2} ){1,8})(\n|$))+$/.test(code);
+    // TODO: could use the length to check that it's actually valid...
+    return /^([0-9a-f]{7}(( ([0-9a-f]{4})){1,8}) *\n)+[0-9a-f]{7}\n?$/.test(
+      code
+    );
   }
 
   public decodeAsString(code: string): number[] {
     return code
       .trim()
-      .replace(/(?<=^|\n)\d{7} (((.{2}){1,2} ){1,8}).+/g, '$1')
+      .replace(/\n[0-9a-f]{7}\n?$/, '')
+      .replace(/(?<=^|\n)[0-9a-f]{7}(( ([0-9a-f]{4})){1,8}) */g, '$1')
       .replace(/\s+/g, '')
       .replace(/(..)(..)/g, '$2$1')
       .replace(/00$/, '')

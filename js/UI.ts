@@ -1,23 +1,25 @@
 import { Editor, EditorConfiguration, fromTextArea } from 'codemirror';
 import { Melba, MelbaConstructorOptions, MelbaType } from 'melba-toast';
 import { Renderers, createDevice } from './Renderers';
-import CodeRenderer from './Renderers/Code';
 import CodeInput from './Inputs/Code';
+import CodeRenderer from './Renderers/Code';
 import IFrame from './Renderers/IFrame';
 import IO from './IO';
 import Image from './Renderers/Image';
+import Inputs from './Inputs';
 import PBMImage from './Renderers/PBMImage';
 import TTY from './Renderers/TTY';
-import { langs } from './Langs';
-
+import codePointsToString from './codePointsToString';
 import { decoders } from './Decoders';
+import { langs } from './Langs';
+import replaceBinaryBytes from './replaceBinaryBytes';
+
 import 'codemirror/addon/comment/comment';
 import 'codemirror/addon/comment/continuecomment';
 import 'codemirror/addon/display/placeholder';
 import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/edit/matchbrackets';
 import 'codemirror/keymap/sublime';
-import { Inputs } from './Inputs';
 
 export type IHashData = {
   lang: string;
@@ -603,7 +605,9 @@ export class UI {
     const args = this.io.getArgs().trim().split(/\n/).join(' '),
       lang = langs.get(this.getLangId()),
       key = Math.random().toString(36).slice(2, 10),
-      bytes = decoders.decode(this.code.read()).length;
+      rawCode = decoders.decode(this.code.read()),
+      code = replaceBinaryBytes(codePointsToString(rawCode)),
+      bytes = code.length;
 
     return `# [${lang.getName()}]${
       args ? ` + \`${args}\`` : ''
@@ -611,17 +615,15 @@ export class UI {
 
 <!-- language-all: lang-${lang.getHighlighterRef()} -->
 
-<pre><code>${this.code
-      .readAsString()
-      .replace(/[&<>]/g, (char) =>
-        char === '<'
-          ? '&lt;'
-          : char === '>'
-          ? '&gt;'
-          : char === '&'
-          ? '&amp;'
-          : char
-      )}</code></pre>
+<pre><code>${code.replace(/[&<>]/g, (char) =>
+      char === '<'
+        ? '&lt;'
+        : char === '>'
+        ? '&gt;'
+        : char === '&'
+        ? '&amp;'
+        : char
+    )}</code></pre>
 
 [Try it online!][TIO-${key}]
 

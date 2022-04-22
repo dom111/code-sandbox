@@ -121,3 +121,5 @@ export class Inputs {
     writeBuffer.forEach((char) => this.buffer.push(char));
   }
 }
+
+export default Inputs;
