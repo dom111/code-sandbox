@@ -7,6 +7,7 @@ import {
 } from 'codemirror';
 import Abstract from './Abstract';
 import { Input } from '../Inputs';
+import replaceBinaryBytes from '../replaceBinaryBytes';
 
 export class Code extends Abstract implements Input {
   private editor: Editor;
@@ -61,15 +62,14 @@ export class Code extends Abstract implements Input {
     );
   }
 
-  public readAsString(replaceBinaryBytes: string | null = '.'): string {
+  public readAsString(binaryReplacementChar: string | null = '.'): string {
     const code = this.editor.getValue();
 
-    if (replaceBinaryBytes === null) {
+    if (binaryReplacementChar === null) {
       return code;
     }
 
-    // Don't replace newlines
-    return code.replace(/[\x00-\x09\x0b-\x1f\x7f-\xff]/g, replaceBinaryBytes);
+    return replaceBinaryBytes(code, binaryReplacementChar);
   }
 
   public reset(): void {

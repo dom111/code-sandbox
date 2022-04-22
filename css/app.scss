@@ -4,235 +4,245 @@
 @use '~xterm/css/xterm.css';
 
 body {
-    background: #272822;
-    color: #f8f8f2;
-    font-family: sans-serif;
-    margin: 0;
-    padding: 1em;
+  background: #272822;
+  color: #f8f8f2;
+  font-family: sans-serif;
+  margin: 0;
+  padding: 0 1em 1em 1em;
 }
 
 .github-corner {
-    position: relative;
-    z-index: 1;
+  position: relative;
+  z-index: 8;
 }
 
 h1,
 h2,
 h3 {
-    select {
-        border-radius: .25em;
-        padding: .5em 1em;
-        vertical-align: top;
+  select {
+    border-radius: 0.25em;
+    padding: 0.5em 1em;
+    vertical-align: top;
+  }
+
+  button {
+    background: var(--accent-color, #fff);
+    border: 0;
+    border-right: 1px solid rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+
+    &:hover {
+      background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2));
     }
 
-    button {
-        background: var(--accent-color, #fff);
-        border: 0;
-        border-right: 1px solid rgba(0, 0, 0, .4);
-        cursor: pointer;
-
-        &:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, .2), rgba(0, 0, 0, .2));
-        }
-
-        &:focus {
-            box-shadow: 0 0 .5em var(--accent-color, #fff);
-        }
-
-        &[name="run"] {
-            --accent-color: #a6e22e;
-
-            &::before {
-                content: '▶';
-            }
-        }
-
-        &[name="stop"] {
-            --accent-color: #f92672;
-
-            &::before {
-                content: '■';
-            }
-        }
-
-        &[name="copy"] {
-            --accent-color: #66d9ef;
-
-            &::before {
-                content: 'Copy Link';
-            }
-        }
-
-        &[name="markdown"] {
-            --accent-color: #e6db74;
-
-            &::before {
-                content: 'Generate Markdown';
-            }
-        }
-
-        &[name="expand"],
-        &[name="collapse"] {
-            border-right: 0;
-            height: 1.7em;
-            width: 1.7em;
-        }
-
-        &[name="expand"]::before {
-            content: '+';
-        }
-
-        &[name="collapse"]::before {
-            content: '-';
-        }
-
-        &[disabled] {
-            cursor: default;
-            opacity: .6;
-
-            &:hover {
-                background-image: none;
-            }
-        }
-
-        &.copied::before {
-            content: 'Copied!' !important; // :(
-        }
+    &:focus {
+      box-shadow: 0 0 0.5em var(--accent-color, #fff);
     }
 
-    span button {
-        padding: .5em 1em;
+    &[name='run'] {
+      --accent-color: #a6e22e;
 
-        &:first-child {
-            border-radius: .25em 0 0 .25em;
-        }
-
-        &:last-child {
-            border-radius: 0 .25em .25em 0;
-            border-right: 0;
-        }
+      &::before {
+        content: '▶';
+      }
     }
 
-    &.code-header,
-    &.code-footer {
-        input[type="button"] {
-            height: 1.5em;
-            padding: .5em;
-            width: 1.5em;
-        }
+    &[name='stop'] {
+      --accent-color: #f92672;
+
+      &::before {
+        content: '■';
+      }
     }
+
+    &[name='copy'] {
+      --accent-color: #66d9ef;
+
+      &::before {
+        content: 'Copy Link';
+      }
+    }
+
+    &[name='markdown'] {
+      --accent-color: #e6db74;
+
+      &::before {
+        content: 'Generate Markdown';
+      }
+    }
+
+    &[name='expand'],
+    &[name='collapse'] {
+      border-right: 0;
+      height: 1.7em;
+      width: 1.7em;
+    }
+
+    &[name='expand']::before {
+      content: '+';
+    }
+
+    &[name='collapse']::before {
+      content: '-';
+    }
+
+    &[disabled] {
+      cursor: default;
+      opacity: 0.6;
+
+      &:hover {
+        background-image: none;
+      }
+    }
+
+    &.copied::before {
+      content: 'Copied!' !important; // :(
+    }
+  }
+
+  span button {
+    padding: 0.5em 1em;
+
+    &:first-child {
+      border-radius: 0.25em 0 0 0.25em;
+    }
+
+    &:last-child {
+      border-radius: 0 0.25em 0.25em 0;
+      border-right: 0;
+    }
+  }
+
+  &.code-header,
+  &.code-footer {
+    input[type='button'] {
+      height: 1.5em;
+      padding: 0.5em;
+      width: 1.5em;
+    }
+  }
 }
 
 span.bytes,
 span.encoded {
-    font-size: 1rem;
+  font-size: 1rem;
 }
 
 span.encoded {
-    margin-left: .25em;
+  margin-left: 0.25em;
 }
 
 span.code-details,
 span.actions {
-    align-items: center;
-    display: flex;
-    margin: .5em 0;
+  align-items: center;
+  display: flex;
+  margin: 0.5em 0;
 }
 
 .CodeMirror {
-    border: 1px solid rgba(248, 248, 242, .3);
-    font-family: courier-new, courier, monospace;
-    font-size: 15px;
-    height: auto;
+  border: 1px solid rgba(248, 248, 242, 0.3);
+  font-family: courier-new, courier, monospace;
+  font-size: 15px;
+  height: auto;
 
-    pre.CodeMirror-placeholder {
-        opacity: .5;
+  pre.CodeMirror-placeholder {
+    opacity: 0.5;
+  }
+
+  .CodeMirror-scroll {
+    max-height: 50vh;
+
+    [name='input'] + & {
+      max-height: 25vh;
     }
+  }
 
-    .CodeMirror-scroll {
-        max-height: 50vh;
-
-        [name="input"] + & {
-            max-height: 25vh;
-        }
-    }
-
-    &:focus-within {
-        border-color: #a6e22e;
-    }
+  &:focus-within {
+    border-color: #a6e22e;
+  }
 }
 
 .tty {
-    border: 1px solid rgba(248, 248, 242, .3);
-    padding: 4px;
-    resize: vertical;
+  border: 1px solid rgba(248, 248, 242, 0.3);
+  padding: 4px;
+  resize: vertical;
 
-    .fullscreen & {
-        height: calc(100vh - 16px);
-    }
+  .fullscreen & {
+    height: calc(100vh - 16px);
+  }
 
-    &:focus-within {
-        border-color: #a6e22e;
-    }
+  &:focus-within {
+    border-color: #a6e22e;
+  }
 }
 
 .toast__container {
-    left: auto;
-    right: 1em;
-    top: 1em;
-    z-index: 3;
+  left: auto;
+  right: 1em;
+  top: 1em;
+  z-index: 10;
 
-    .toast--hide {
-        transform: translateX(100%) translateY(0);
-    }
+  .toast--hide {
+    transform: translateX(100%) translateY(0);
+  }
 }
 
 iframe {
-    border: 1px solid rgba(248, 248, 242, .3);
-    height: 25em;
-    width: 100%;
+  border: 1px solid rgba(248, 248, 242, 0.3);
+  height: 25em;
+  width: 100%;
 }
 
 footer {
-    font-size: .8em;
-    margin-top: 1em;
-    text-align: center;
+  font-size: 0.8em;
+  margin-top: 1em;
+  text-align: center;
 }
 
 @media (min-width: 525px) {
 }
 
 @media (min-width: 990px) {
-    h1,
-    h2,
-    h3 {
-        display: flex;
+  h1,
+  h2,
+  h3 {
+    display: flex;
 
-        > * {
-            margin-left: .5em;
-        }
-
-        button {
-            &[name="run"]::before {
-                content: 'Run';
-            }
-
-            &[name="stop"]::before {
-                content: 'Stop';
-            }
-
-            &[name="copy"]::before {
-                content: 'Copy Link';
-            }
-
-            &[name="markdown"]::before {
-                content: 'Generate Markdown';
-            }
-        }
+    > * {
+      margin-left: 0.5em;
     }
 
-    span.code-details,
-    span.actions {
-        margin: 0 .25em;
+    button {
+      &[name='run']::before {
+        content: 'Run';
+      }
+
+      &[name='stop']::before {
+        content: 'Stop';
+      }
+
+      &[name='copy']::before {
+        content: 'Copy Link';
+      }
+
+      &[name='markdown']::before {
+        content: 'Generate Markdown';
+      }
     }
+  }
+
+  h1 {
+    background: #272822;
+    box-shadow: 0 0 0.5em #272822;
+    margin: 0;
+    padding: 0.5em 0;
+    position: sticky;
+    top: 0;
+    z-index: 7;
+  }
+
+  span.code-details,
+  span.actions {
+    margin: 0 0.25em;
+  }
 }

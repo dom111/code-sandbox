@@ -130,7 +130,7 @@ body > img {
     //   }
     // });
     // `;
-    return `e=document.querySelector("img"),t=document.querySelector(".controls");document.addEventListener("click",(function(o){var c=o.target,l=getComputedStyle(e).getPropertyValue("--z");c.matches(".zoom-in,.zoom-in *")&&e.style.setProperty("--z",2*l),c.matches(".zoom-out,.zoom-out *")&&e.style.setProperty("--z",l/2),c.matches(".toggle,.toggle *")&&t.classList.toggle("left"),c.matches("button.checked")&&e.classList.toggle("checked")}))`;
+    return `var e=document.querySelector("img"),t=document.querySelector(".controls");document.addEventListener("click",(function(o){var c=o.target,l=getComputedStyle(e).getPropertyValue("--z");c.matches(".zoom-in,.zoom-in *")&&e.style.setProperty("--z",2*l),c.matches(".zoom-out,.zoom-out *")&&e.style.setProperty("--z",l/2),c.matches(".toggle,.toggle *")&&t.classList.toggle("left"),c.matches("button.checked")&&e.classList.toggle("checked")}))`;
   }
 
   public matches(mimeType: string): boolean {

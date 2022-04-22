@@ -1,4 +1,6 @@
 import { Decoder } from '../Decoders';
+import codePointsToString from '../codePointsToString';
+import stringToCodePoints from '../stringToCodePoints';
 
 export class Default implements Decoder {
   public name(): string {
@@ -6,11 +8,11 @@ export class Default implements Decoder {
   }
 
   protected codePointsToString(code: number[]): string {
-    return code.reduce((code, ord) => code + String.fromCharCode(ord), '');
+    return codePointsToString(code);
   }
 
   protected stringToCodePoints(code: string): number[] {
-    return code.split('').map((c: string): number => c.charCodeAt(0));
+    return stringToCodePoints(code);
   }
 
   public matches(code: number[]): boolean {
