@@ -553,11 +553,11 @@ export class UI {
     }
 
     this.setLang(data.lang ?? this.getLangId());
-    this.codeHeader.write(data.header ?? '');
-    this.code.write(data.code ?? '');
-    this.codeFooter.write(data.footer ?? '');
+    this.codeHeader.write(decodeURIComponent(escape(data.header ?? '')));
+    this.code.write(decodeURIComponent(escape(data.code ?? '')));
+    this.codeFooter.write(decodeURIComponent(escape(data.footer ?? '')));
     this.io.setArgs(data.args ?? '');
-    this.io.setStdin(data.input ?? '');
+    this.io.setStdin(decodeURIComponent(escape(data.input ?? '')));
 
     if (data.mime) {
       this.setMimeType(data.mime);
