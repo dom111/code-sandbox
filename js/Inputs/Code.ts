@@ -63,7 +63,7 @@ export class Code extends Abstract implements Input {
   }
 
   public readAsString(binaryReplacementChar: string | null = '.'): string {
-    const code = this.editor.getValue();
+    const code = unescape(encodeURIComponent(this.editor.getValue()));
 
     if (binaryReplacementChar === null) {
       return code;

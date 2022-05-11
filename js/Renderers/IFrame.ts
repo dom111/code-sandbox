@@ -9,7 +9,7 @@ export class IFrame extends Abstract implements Renderer {
   public constructor(parent: HTMLElement) {
     super();
 
-    this.container = this.createElement('iframe') as HTMLIFrameElement;
+    this.container = this.createElement('iframe');
 
     parent.append(this.container);
 
@@ -43,7 +43,17 @@ export class IFrame extends Abstract implements Renderer {
   }
 
   private update(): void {
-    this.container.src = `data:${this.mimeType};base64,${btoa(this.buffer)}`;
+    // We need to destroy and recreate the IFrame so that we don't clobber the back button.
+    const container = this.createElement(
+      'iframe',
+      this.container.hasAttribute('hidden')
+    );
+
+    container.src = `data:${this.mimeType};base64,${btoa(this.buffer)}`;
+
+    this.container.replaceWith(container);
+
+    this.container = container;
   }
 }
 

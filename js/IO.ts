@@ -1,5 +1,4 @@
 import { Editor } from 'codemirror';
-import { decoders } from './Decoders';
 import Renderers from './Renderers';
 
 export class IO {

@@ -13,10 +13,17 @@ export abstract class Abstract implements Renderer {
     this.resize();
   }
 
-  protected createElement(tag: string = 'div'): HTMLElement {
+  protected createElement(tag: 'div', hidden?: boolean): HTMLDivElement;
+  protected createElement(tag: 'iframe', hidden?: boolean): HTMLIFrameElement;
+  protected createElement(
+    tag: string = 'div',
+    hidden: boolean = true
+  ): HTMLElement {
     const element = document.createElement(tag);
 
-    element.setAttribute('hidden', '');
+    if (hidden) {
+      element.setAttribute('hidden', '');
+    }
 
     return element;
   }
