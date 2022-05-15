@@ -106,7 +106,9 @@ export class UI {
       new PBMImage(stdoutContainer),
       new Image(stdoutContainer),
       new IFrame(stdoutContainer),
-      new TTY(stdoutContainer)
+      new TTY(stdoutContainer, {
+        autoGrow: true,
+      })
     );
     this.stdout.activate('text/plain');
 

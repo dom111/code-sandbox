@@ -2,105 +2,29 @@ import { ITerminalOptions, Terminal } from 'xterm';
 import Abstract from './Abstract';
 import { FitAddon } from 'xterm-addon-fit/src/FitAddon';
 import { Renderer } from '../Renderers';
+import Sequence from './TTY/Sequence';
+
+interface ITTYOptions extends ITerminalOptions {
+  autoGrow?: boolean;
+  maxGrow?: number;
+}
 
 export class TTY extends Abstract implements Renderer {
   private buffer: string = '';
-  private escapeInput: string = '';
   private fit: FitAddon;
   private maxX: number = 0;
   private maxY: number = 0;
-  private options: ITerminalOptions;
+  private options: ITTYOptions;
+  private partialSequence: string = '';
+  private sequences: Sequence[] = [];
   private terminal: Terminal;
   private x: number = 0;
   private y: number = 0;
 
-  constructor(parent: HTMLElement, options: ITerminalOptions = {}) {
-    super();
-
-    this.container = this.createElement('div');
-    this.container.classList.add('tty');
-
-    parent.append(this.container);
-
-    this.fit = new FitAddon();
-
-    this.terminal = TTY.createTerminal(options);
-    this.terminal.loadAddon(this.fit);
-    this.terminal.open(this.container);
-
-    this.options = options;
-  }
-
-  private static cleanText(text: string): string {
-    // patch for xterm.js - this allows VT and FF but patches \n, vs. convertEol option
-    return text.replace(/(?<!\r)\n/g, '\r\n');
-  }
-
-  private static createTerminal(options: ITerminalOptions = {}): Terminal {
-    return new Terminal({
-      disableStdin: true,
-      screenReaderMode: true,
-      ...options,
-      theme: {
-        background: '#272822',
-        cursor: 'transparent',
-        foreground: '#f8f8f2',
-        ...(options.theme ?? {}),
-      },
-    });
-  }
-
-  private handleInputForSize(input: string): void {
-    [input, this.escapeInput] = this.processInputForEscape(
-      input,
-      this.escapeInput
-    );
-
-    [this.x, this.y, this.maxX, this.maxY] = this.processInputForSize(
-      this.x,
-      this.y,
-      this.maxX,
-      this.maxY,
-      input
-    );
-  }
-
-  public matches(): boolean {
-    return true;
-  }
-
-  private processInputForEscape(
-    input: string,
-    escapeInput: string = ''
-  ): [string, string] {
-    if (
-      (escapeInput.length === 0 && input === '\x1b') ||
-      (escapeInput.length === 1 && input === '[') ||
-      (escapeInput && !input.match(/[\x40-\x7e]/))
-    ) {
-      return ['', escapeInput + input];
-    }
-
-    if (
-      (this.escapeInput.length === 1 && input !== '[') ||
-      (this.escapeInput && input.match(/[\x40-\x7e]/))
-    ) {
-      return [escapeInput + input, ''];
-    }
-
-    return [input, escapeInput];
-  }
-
-  private processInputForSize(
-    x: number,
-    y: number,
-    maxX: number,
-    maxY: number,
-    input: string,
-    cols: number = this.terminal.cols
-  ): [number, number, number, number] {
-    if (input.match(/\x1b\[(.*?)([\x40-\x7e])/)) {
-      const [, value, type] = input.match(/\x1b\[(.*?)([\x40-\x7e])/);
+  public static defaultSequences: Sequence[] = [
+    // OCI escape sequences
+    new Sequence((input, x, y, cols) => {
+      const [, value, type] = input.match(/^\x1b\[(.*?)([\x40-\x7e])$/);
 
       switch (type) {
         case 'F':
@@ -141,40 +65,184 @@ export class TTY extends Abstract implements Renderer {
         x = cols;
       }
 
-      maxX = Math.max(x, maxX);
-      maxY = Math.max(y, maxY);
+      return [x, y];
+    }, /\x1b\[.*?[\x40-\x7e]/),
+    new Sequence(() => [0, 0], /\x1bc/),
+    new Sequence((input, x, y) => {
+      switch (input) {
+        case '\n':
+          y++;
+          x = 0;
+          break;
 
-      return [x, y, maxX, maxY];
+        case '\r':
+          x = 0;
+          break;
+
+        case '\f':
+        case '\v':
+          y++;
+          break;
+
+        case '\t':
+          x += x % 8 || 8;
+          break;
+
+        // backspace
+        case '\x08':
+          x--;
+      }
+
+      return [x, y];
+    }, /\n|\r|\f|\v|\t|\x08/),
+  ];
+
+  constructor(
+    parent: HTMLElement,
+    options: ITTYOptions = {},
+    sequences: Sequence[] = TTY.defaultSequences
+  ) {
+    super();
+
+    this.container = this.createElement('div');
+    this.container.classList.add('tty');
+
+    parent.append(this.container);
+
+    this.fit = new FitAddon();
+
+    this.terminal = TTY.createTerminal(options);
+    this.terminal.loadAddon(this.fit);
+    this.terminal.open(this.container);
+
+    this.options = options;
+    this.sequences.push(...sequences);
+  }
+
+  private static cleanText(text: string): string {
+    // patch for xterm.js - this allows VT and FF but patches \n, vs. convertEol option
+    return text.replace(/(?<!\r)\n/g, '\r\n');
+  }
+
+  private static createTerminal(options: ITTYOptions = {}): Terminal {
+    return new Terminal({
+      disableStdin: true,
+      screenReaderMode: true,
+      ...options,
+      theme: {
+        background: '#272822',
+        cursor: 'transparent',
+        foreground: '#f8f8f2',
+        ...(options.theme ?? {}),
+      },
+    });
+  }
+
+  private handleInputForSize(input: string): void {
+    [input, this.partialSequence] = this.processInputForSequence(
+      input,
+      this.partialSequence
+    );
+
+    if (!input) {
+      return;
     }
 
-    switch (input) {
-      case '\n':
-        y++;
-        x = 0;
-        break;
+    [this.x, this.y, this.maxX, this.maxY] = this.processInputForSize(
+      this.x,
+      this.y,
+      this.maxX,
+      this.maxY,
+      input
+    );
+  }
 
-      case '\f':
-      case '\r':
-      case '\v':
-        y++;
-        break;
+  public matches(): boolean {
+    return true;
+  }
 
-      case '\t':
-        x += x % 8 || 8;
-        break;
+  private processInputForSequence(
+    input: string,
+    partialSequence: string = ''
+  ): [string, string] {
+    const combinedInput = partialSequence + input;
 
-      // backspace
-      case '\x08':
-        x--;
-        break;
+    if (partialSequence) {
+      const [isPartialSequence, sequence] = this.sequences.reduce(
+        (
+          [finished, matchingSequence]: [boolean, Sequence | null],
+          sequence
+        ) => {
+          if (finished) {
+            return [finished, sequence];
+          }
 
-      default:
+          if (sequence.matchesPartial(combinedInput)) {
+            return [true, sequence];
+          }
+
+          return [false, null];
+        },
+        [false, null]
+      );
+
+      if (isPartialSequence && !sequence.matchesExact(combinedInput)) {
+        return ['', combinedInput];
+      }
+
+      return [combinedInput, ''];
+    }
+
+    if (
+      this.sequences.reduce(
+        (finished, sequence) =>
+          finished ||
+          (sequence.matchesPartial(input) && !sequence.matchesExact(input)),
+        false
+      )
+    ) {
+      return ['', input];
+    }
+
+    return [combinedInput, ''];
+  }
+
+  private processInputForSize(
+    x: number,
+    y: number,
+    maxX: number,
+    maxY: number,
+    input: string,
+    cols: number = this.terminal.cols
+  ): [number, number, number, number] {
+    while (input.length) {
+      let match: string;
+
+      const result = this.sequences.reduce((finished, sequence) => {
+        if (finished) {
+          return finished;
+        }
+
+        if (sequence.matchesStart(input)) {
+          [input, match] = sequence.capture(input);
+
+          [x, y] = sequence.calculatePosition(match, x, y, cols);
+
+          return true;
+        }
+
+        return false;
+      }, false);
+
+      if (!result) {
+        input = input.slice(1);
         x++;
+      }
     }
 
-    if (x >= cols) {
+    while (x >= cols) {
       y++;
-      x = 0;
+      x %= cols;
     }
 
     maxX = Math.max(x, maxX);
@@ -183,25 +251,24 @@ export class TTY extends Abstract implements Renderer {
     return [x, y, maxX, maxY];
   }
 
-  private reprocessBufferForSize(): number[] {
+  private reprocessBufferForSize(): [number, number] {
     let maxX = 0,
       maxY = 0,
       x = 0,
       y = 0,
-      escapeInput = '';
+      partialSequence = '';
 
-    const results = this.buffer.match(/\x1b\[(.*?)([\x40-\x7e])|(.)/g);
+    Array.from(this.buffer).forEach((input) => {
+      [input, partialSequence] = this.processInputForSequence(
+        input,
+        partialSequence
+      );
 
-    if (!results) {
-      return [1, 1];
-    }
-
-    results.forEach((input) => {
-      [input, escapeInput] = this.processInputForEscape(input, escapeInput);
-
-      if (input) {
-        [x, y, maxX, maxY] = this.processInputForSize(x, y, maxX, maxY, input);
+      if (!input) {
+        return;
       }
+
+      [x, y, maxX, maxY] = this.processInputForSize(x, y, maxX, maxY, input);
     });
 
     return [maxX + 1, maxY + 1];
@@ -209,7 +276,7 @@ export class TTY extends Abstract implements Renderer {
 
   public reset(): void {
     this.buffer = '';
-    this.escapeInput = '';
+    this.partialSequence = '';
     this.maxX = 0;
     this.maxY = 0;
     this.x = 0;
@@ -229,6 +296,8 @@ export class TTY extends Abstract implements Renderer {
     const [, visibleLines] = this.reprocessBufferForSize(),
       dimensions = this.fit.proposeDimensions();
 
+    console.log(this.options.rows ?? visibleLines);
+
     this.terminal.resize(
       this.options.cols ?? dimensions?.cols ?? this.terminal.cols,
       this.options.rows ?? visibleLines
@@ -242,14 +311,28 @@ export class TTY extends Abstract implements Renderer {
       char = String.fromCharCode(char);
     }
 
+    if (char.length > 1) {
+      return Array.from(char).forEach((char) => this.write(char));
+    }
+
     this.buffer += char;
 
-    this.handleInputForSize(char);
+    if (this.options.autoGrow) {
+      this.handleInputForSize(char);
 
-    const rows = this.maxY + 1;
+      const visibleLines = this.maxY + 1,
+        rows = Math.min(
+          Math.max(
+            this.options.rows ?? 0,
+            this.terminal.rows ?? 0,
+            visibleLines
+          ),
+          this.options.maxGrow ?? Infinity
+        );
 
-    if (rows !== this.terminal.rows) {
-      this.terminal.resize(this.terminal.cols, rows);
+      if (rows !== this.terminal.rows) {
+        this.terminal.resize(this.terminal.cols, rows);
+      }
     }
 
     this.terminal.write(TTY.cleanText(char));

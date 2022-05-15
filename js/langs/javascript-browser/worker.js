@@ -45,6 +45,7 @@ addEventListener('message', ({ data }) => {
 
   postMessage({
     type: 'done',
-    output: result,
+    // ensure `result` is a string
+    output: result + '',
   });
 });
