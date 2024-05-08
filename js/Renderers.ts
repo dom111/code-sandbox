@@ -10,6 +10,7 @@ export interface Renderer {
 
 export class Renderers {
   private buffer: string = '';
+  private prepend: string = '';
   private registered: Renderer[] = [];
 
   public constructor(...renderers: Renderer[]) {
@@ -23,7 +24,7 @@ export class Renderers {
         if (!renderer.isActive()) {
           renderer.activate(mimeType);
           renderer.reset();
-          renderer.write(this.buffer);
+          renderer.write(this.prepend + this.buffer);
         }
 
         return true;
@@ -36,6 +37,17 @@ export class Renderers {
     }, false);
 
     this.resize();
+  }
+
+  public refresh(): void {
+    this.registered.forEach((renderer) => {
+      this.registered
+        .filter((renderer) => renderer.isActive())
+        .forEach((renderer) => {
+          renderer.reset();
+          renderer.write(this.prepend + this.buffer);
+        });
+    });
   }
 
   public register(...renderers: Renderer[]): void {
@@ -53,6 +65,12 @@ export class Renderers {
         renderer.resize();
       }
     });
+  }
+
+  public setPrepend(prepend: string): void {
+    this.prepend = prepend;
+
+    this.refresh();
   }
 
   public write(char: number | string): void {

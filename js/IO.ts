@@ -1,17 +1,8 @@
 import { Editor } from 'codemirror';
-import Renderers from './Renderers';
+import { decoders } from './Decoders';
 
 export class IO {
-  constructor(
-    private languageSelector: HTMLSelectElement,
-    private stdin: Editor,
-    private stdout: Renderers,
-    private stderr: Renderers,
-    private args: Editor
-  ) {}
-  public static getRaw(field: Editor): string {
-    return field.getValue();
-  }
+  constructor(private stdin: Editor, private args: Editor) {}
 
   public getArgs(): string {
     return this.args.getValue();
@@ -26,7 +17,9 @@ export class IO {
   }
 
   public getStdin(): string {
-    return this.stdin.getValue();
+    return decoders
+      .decodeAsString(this.stdin.getValue())
+      .reduce((value, char) => value + String.fromCharCode(char), '');
   }
 
   public setStdin(value: string): void {

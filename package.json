@@ -1,14 +1,15 @@
 {
   "name": "code-sandbox",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Code Sandbox - run code online via WASM",
   "scripts": {
     "build": "npm run build:esbuild",
     "build:esbuild": "node esbuild.js prod",
     "build:esbuild:watch": "node esbuild.js dev watch",
-    "build:prettier:check": "prettier -c .",
-    "build:prettier:write": "prettier -w .",
     "build:watch": "npm run build:esbuild:watch",
+    "lint:tsc": "tsc .",
+    "lint:prettier": "prettier -c .",
+    "lint:prettier:write": "prettier -w .",
     "test": "npm run test:unit && npm run test:functional",
     "test:functional": "jest -c jest.config.functional.ts",
     "test:unit": "jest -c jest.config.unit.ts"
