@@ -48,7 +48,7 @@ export class PBMImage extends Image implements Renderer {
       clearTimeout(this.superTimeout);
     }
 
-    this.superTimeout = setTimeout(() => {
+    this.superTimeout = window.setTimeout(() => {
       try {
         super.reset();
 
