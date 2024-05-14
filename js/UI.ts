@@ -121,9 +121,7 @@ export class UI {
     this.stdout.activate('text/plain');
 
     this.stderr = createDevice(
-      new TTY(document.querySelector('div.stderr') as HTMLDivElement, {
-        rows: 8,
-      })
+      new TTY(document.querySelector('div.stderr') as HTMLDivElement)
     );
     this.stderr.setPrepend('\x1b[31m');
     this.stderr.activate('text/plain');
@@ -347,17 +345,7 @@ export class UI {
   }
 
   private runCode(): void {
-    const started = Date.now(),
-      stopHandler = () => {
-        worker.terminate();
-
-        this.stderr.write(`Aborted execution after ${Date.now() - started}ms`);
-
-        this.runButton.removeAttribute('disabled');
-        this.stopButton.setAttribute('disabled', '');
-
-        this.stopButton.removeEventListener('click', stopHandler);
-      };
+    const started = Date.now();
 
     this.stdout.reset();
     this.stderr.reset();
@@ -365,7 +353,7 @@ export class UI {
     this.runButton.setAttribute('disabled', '');
     this.stopButton.removeAttribute('disabled');
 
-    const worker = langs.run(
+    langs.run(
       this.getLangId(),
       [].concat(
         [
@@ -376,42 +364,51 @@ export class UI {
       ),
       this.io.getArgs(),
       this.io.getStdin()
-    );
+    )
+      .then((runner) => {
+        const stopHandler = () => {
+          runner.terminate();
 
-    this.stopButton.addEventListener('click', stopHandler);
+          this.stderr.write(`Aborted execution after ${Date.now() - started}ms`);
 
-    worker.onmessage = ({ data }) => {
-      const { type, output, error } = data;
+          this.runButton.removeAttribute('disabled');
+          this.stopButton.setAttribute('disabled', '');
 
-      if (output) {
-        this.stdout.write(output);
-      }
+          this.stopButton.removeEventListener('click', stopHandler);
+        };
 
-      if (error) {
-        this.stderr.write(error ?? '');
-      }
+        this.stopButton.addEventListener('click', stopHandler);
 
-      if (type === 'done') {
-        this.stderr.write(
-          `Completed execution after ${Date.now() - started}ms`
+        runner.on('output', ({ output, error }) => {
+          this.stdout.write(output ?? '');
+          this.stderr.write(error ?? '');
+        });
+
+        runner.on('done', ({ exitCode }) => {
+          this.stderr.write(
+            `Execution finished with status code ${exitCode} after ${Date.now() - started}ms`
+          );
+
+          this.runButton.removeAttribute('disabled');
+          this.stopButton.setAttribute('disabled', '');
+
+          this.stopButton.removeEventListener('click', stopHandler);
+
+          // Make sure the process is stopped
+          runner.terminate();
+        });
+
+        runner.on('toast', ({ message, type = 'info' }) =>
+          this.toast(message, type)
         );
 
-        this.runButton.removeAttribute('disabled');
-        this.stopButton.setAttribute('disabled', '');
+        runner.on('error', (e) => {
+          this.toast(`Worker error: ${e.message}`, 'error');
 
-        this.stopButton.removeEventListener('click', stopHandler);
-
-        // Make sure the process is stopped
-        worker.terminate();
-      }
-    };
-
-    worker.onerror = (e) => {
-      this.toast(`Worker error: ${e.message}`, 'error');
-
-      this.runButton.removeAttribute('disabled');
-      this.stopButton.setAttribute('disabled', '');
-    };
+          this.runButton.removeAttribute('disabled');
+          this.stopButton.setAttribute('disabled', '');
+        });
+      });
   }
 
   private populateArgs(): void {

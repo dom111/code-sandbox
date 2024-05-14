@@ -25,8 +25,11 @@
   },
   "homepage": "https://github.com/dom111/code-sandbox#readme",
   "dependencies": {
+    "@bjorn3/browser_wasi_shim": "^0.3.0",
     "@wasmer/sdk": "^0.6.0",
     "codemirror": "^5.65.0",
+    "coi-serviceworker": "^0.1.7",
+    "eventemitter3": "^5.0.1",
     "melba-toast": "^2.0.0",
     "xterm": "^4.16.0",
     "xterm-addon-fit": "^0.5.0"

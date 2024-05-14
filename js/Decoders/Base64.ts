@@ -7,8 +7,8 @@ export class Base64 extends Default implements Decoder {
   }
 
   public matchesAsString(code: string): boolean {
-    // base64 input is at least 4 chars
-    if (code.length < 4) {
+    // base64 input is at least 4 chars, pick 8 as `prin` is valid
+    if (code.length < 8 || /[^A-Za-z0-9+/=]/.test(code)) {
       return false;
     }
 

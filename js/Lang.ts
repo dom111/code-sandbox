@@ -1,10 +1,12 @@
-export type Runner = (code: number[], input: string, args: string) => Worker;
+import Runner from './Runner';
+
+export type RunnerProvider = (code: number[], input: string, args: string) => Promise<Runner>;
 
 export class Lang {
   constructor(
     private id: string,
     private name: string,
-    private runner: Runner,
+    private runner: RunnerProvider,
     private url: string = null,
     private args: string[] | null = null,
     private highlighterRef: string = id
@@ -30,7 +32,7 @@ export class Lang {
     return this.highlighterRef;
   }
 
-  run(code: number[], args: string, input: string): Worker {
+  run(code: number[], input: string, args: string): Promise<Runner> {
     return this.runner(code, input, args);
   }
 }

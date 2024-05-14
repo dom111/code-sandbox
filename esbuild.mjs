@@ -4,17 +4,18 @@ import { sassPlugin } from 'esbuild-sass-plugin';
 const watching = process.argv.includes('watch'),
   buildOptions = {
     entryPoints: [
-      'js/app.ts',
-      'css/app.scss',
-      'js/langs/javascript-browser/worker.js',
-      'js/langs/php-wasm/worker.ts',
-      'js/langs/python-wasmer/worker.ts',
-      'js/langs/webperl-5.28.1/worker.js',
+      { in: 'js/app.ts', out: 'dist/js/app' },
+      { in: 'js/coi-serviceworker.ts', out: 'coi-serviceworker' },
+      { in: 'css/app.scss', out: 'dist/css/app' },
+      { in: 'js/langs/javascript-browser/worker.js', out: 'dist/js/langs/javascript-browser/worker' },
+      { in: 'js/langs/webperl-5.28.1/worker.js', out: 'dist/js/langs/webperl-5.28.1/worker' }
     ],
     bundle: true,
     minify: true,
     sourcemap: true,
-    outdir: 'dist',
+    external: ["https://unpkg.com/@wasmer/sdk@latest?module"],
+    outdir: '.',
+    format: 'esm',
     plugins: [sassPlugin(), {
       name: 'on-end',
       setup(build) {

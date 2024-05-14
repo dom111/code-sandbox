@@ -1,8 +1,8 @@
-import {Page} from "puppeteer";
+import { ElementHandle, Page } from 'puppeteer';
 import {getRawProperty} from "./getProperties";
 
 export const getTerminalText = async (page: Page, selector: string): Promise<string> => (await getRawProperty(
-  page.$<HTMLDivElement>(selector + ' .tty .xterm .xterm-accessibility .live-region'),
+  page.$(selector + ' .tty .xterm .xterm-accessibility .live-region') as Promise<ElementHandle<HTMLDivElement>>,
   'innerText'
 ) as string)
   .replace(/\u200b/g, '');
