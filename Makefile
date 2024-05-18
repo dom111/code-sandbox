@@ -1,8 +1,8 @@
 SHELL = /bin/bash
 
 .PHONY: build
-build: docker-compose.override.yml node_modules
-	docker-compose run --rm web npm run build
+build: node_modules
+	npm run build
 
 .PHONY: test
 test: docker-compose.override.yml node_modules
@@ -15,8 +15,8 @@ docker-compose.override.yml:
 	@echo "  web:" >> docker-compose.override.yml
 	@echo "    user: `id -u`:`id -g`" >> docker-compose.override.yml
 
-dist/js/app.js: node_modules
+dist/js/app.js:
 dist/js/app.js: build
 
 node_modules:
-	docker-compose run --rm web npm install
+	npm install
