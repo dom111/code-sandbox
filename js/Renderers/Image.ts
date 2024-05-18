@@ -1,4 +1,5 @@
 import IFrame from './IFrame';
+import { options } from '../Options';
 
 /**
  * Uses the following icons:
@@ -8,8 +9,11 @@ import IFrame from './IFrame';
 export class Image extends IFrame {
   private imageBuffer: string = '';
   private imageMimeType: string = 'image/png';
+  private zoomLevel: number = 1;
 
   public activate(mimeType: string) {
+    this.zoomLevel = options.get<number>('zoomLevel', 1);
+
     super.activate('text/html');
 
     this.imageMimeType = mimeType;
@@ -24,7 +28,7 @@ html, body {
 }
 
 body > img {
-  --z: 1;
+  --z: ${this.zoomLevel};
   image-rendering: pixelated;
   transform: scale(var(--z));
   transform-origin: 0 0;
@@ -74,6 +78,11 @@ body > img {
 .controls.left button.toggle:after {
   content: '\\27f6';
 }
+
+.controls .zoom-level {
+  font-family: sans-serif;
+  text-align: center;
+}
 `
       .replace(/\s*,\s*/g, ',')
       .replace(/\s*>\s*/g, '>')
@@ -86,7 +95,9 @@ body > img {
   private data(): string {
     return `
 <style>${this.css()}</style>
-<img src="data:${this.imageMimeType};base64,${btoa(this.imageBuffer)}">
+<img src="data:${this.imageMimeType};base64,${btoa(this.imageBuffer)}" class="${
+      options.get<boolean>('transparencyCheckerboard', false) ? 'checked' : ''
+    }">
 <div class="controls">
   <header>
     <button class="toggle" title="Toggle position"></button>
@@ -94,6 +105,7 @@ body > img {
   <section>
     <button class="zoom-in" title="Zoom in"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTMgMTBoLTN2M2gtMnYtM2gtM3YtMmgzdi0zaDJ2M2gzdjJ6bTguMTcyIDE0bC03LjM4Ny03LjM4N2MtMS4zODguODc0LTMuMDI0IDEuMzg3LTQuNzg1IDEuMzg3LTQuOTcxIDAtOS00LjAyOS05LTlzNC4wMjktOSA5LTkgOSA0LjAyOSA5IDljMCAxLjc2MS0uNTE0IDMuMzk4LTEuMzg3IDQuNzg1bDcuMzg3IDcuMzg3LTIuODI4IDIuODI4em0tMTIuMTcyLThjMy44NTkgMCA3LTMuMTQgNy03cy0zLjE0MS03LTctNy03IDMuMTQtNyA3IDMuMTQxIDcgNyA3eiIvPjwvc3ZnPg=="></button>
     <button class="zoom-out" title="Zoom out"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTMgMTBoLTh2LTJoOHYyem04LjE3MiAxNGwtNy4zODctNy4zODdjLTEuMzg4Ljg3NC0zLjAyNCAxLjM4Ny00Ljc4NSAxLjM4Ny00Ljk3MSAwLTktNC4wMjktOS05czQuMDI5LTkgOS05IDkgNC4wMjkgOSA5YzAgMS43NjEtLjUxNCAzLjM5OC0xLjM4NyA0Ljc4NWw3LjM4NyA3LjM4Ny0yLjgyOCAyLjgyOHptLTEyLjE3Mi04YzMuODU5IDAgNy0zLjE0IDctN3MtMy4xNDEtNy03LTctNyAzLjE0LTcgNyAzLjE0MSA3IDcgN3oiLz48L3N2Zz4="></button>
+    <div class="zoom-level">${this.zoomLevel * 100}%</div>
   </section>
   <section>
     <button class="checked" title="Toggle transparency checkerboard">&#x2580;&#x2584;</button>
@@ -105,32 +117,53 @@ body > img {
 
   // TODO: this whole renderer should be a separate package with the contents parsed into a minified file
   private js(): string {
-    //     return `
-    // const image = document.querySelector('img'),
-    //   controls = document.querySelector('.controls');
-    //
-    // document.addEventListener('click', (event) => {
-    //   const target = event.target,
-    //     currentZoom = getComputedStyle(image).getPropertyValue('--z');
-    //
-    //   if (target.matches('.zoom-in,.zoom-in *')) {
-    //       image.style.setProperty('--z', currentZoom * 2);
-    //   }
-    //
-    //   if (target.matches('.zoom-out,.zoom-out *')) {
-    //       image.style.setProperty('--z', currentZoom / 2);
-    //   }
-    //
-    //   if (target.matches('.toggle,.toggle *')) {
-    //     controls.classList.toggle('left');
-    //   }
-    //
-    //   if (target.matches('button.checked')) {
-    //     image.classList.toggle('checked');
-    //   }
-    // });
-    // `;
-    return `var e=document.querySelector("img"),t=document.querySelector(".controls");document.addEventListener("click",(function(o){var c=o.target,l=getComputedStyle(e).getPropertyValue("--z");c.matches(".zoom-in,.zoom-in *")&&e.style.setProperty("--z",2*l),c.matches(".zoom-out,.zoom-out *")&&e.style.setProperty("--z",l/2),c.matches(".toggle,.toggle *")&&t.classList.toggle("left"),c.matches("button.checked")&&e.classList.toggle("checked")}))`;
+    return `
+    const image = document.querySelector('img'),
+      controls = document.querySelector('.controls'),
+      zoomLevel = controls.querySelector('.zoom-level'),
+      storeOption = (name, value) => {
+        if (!parent) {
+          return;
+        }
+        
+        parent.postMessage({name:"setOption",value:{name,value}}, '${
+          location.protocol + '//' + location.host
+        }');
+      };
+
+    document.addEventListener('click', (event) => {
+      const target = event.target,
+        currentZoom = getComputedStyle(image).getPropertyValue('--z');
+
+      if (target.matches('.zoom-in,.zoom-in *')) {
+        const newZoom = currentZoom * 2;
+
+        image.style.setProperty('--z', newZoom);
+        zoomLevel.innerText = (newZoom * 100) + '%';
+        
+        storeOption('zoomLevel', newZoom);
+      }
+
+      if (target.matches('.zoom-out,.zoom-out *')) {
+        const newZoom = currentZoom / 2;
+
+        image.style.setProperty('--z', newZoom);
+        zoomLevel.innerText = (newZoom * 100) + '%';
+
+        storeOption('zoomLevel', newZoom);
+      }
+
+      if (target.matches('.toggle,.toggle *')) {
+        controls.classList.toggle('left');
+      }
+
+      if (target.matches('button.checked')) {
+        image.classList.toggle('checked');
+
+        storeOption('transparencyCheckerboard', image.classList.contains('checked'));
+      }
+    });
+    `;
   }
 
   public matches(mimeType: string): boolean {

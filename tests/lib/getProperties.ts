@@ -1,4 +1,4 @@
-import { ElementHandle, EvaluateFn } from 'puppeteer';
+import { ElementHandle, EvaluateFunc, EvaluateFuncWith } from 'puppeteer';
 
 export const getRawProperty = async <
   T extends HTMLElement = HTMLElement,
@@ -7,7 +7,7 @@ export const getRawProperty = async <
   element: Promise<ElementHandle<T>> | ElementHandle<T>,
   property: K
 ): Promise<T[K]> =>
-  await (await (await element)?.getProperty(property as string))?.jsonValue();
+  await (await (await element)?.getProperty(property as string))?.jsonValue() as T[K];
 
 export const getRawProperties = async <
   T extends HTMLElement = HTMLElement,
@@ -19,12 +19,12 @@ export const getRawProperties = async <
   Promise.all(
     (await elements).map(async (element) =>
       ['innerText', 'innerHTML'].includes(property as string)
-        ? await element?.evaluate(
+        ? await element?.evaluate<[], EvaluateFuncWith<T, []>>(
           new Function(
             'element',
-            `return element.${property};`
-          ) as EvaluateFn<T>
-        )
+            `return element.${String(property)};`
+          ) as EvaluateFuncWith<T, []>
+        ) as T[K]
         : getRawProperty<T, K>(element, property)
     )
   );

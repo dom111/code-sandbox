@@ -2,7 +2,7 @@ importScripts('../../../../js/lib/webperl-5.28.1/webperl.js');
 
 addEventListener('message', ({ data }) => {
   // TODO: check 'type' param too...
-  const { code, args, input } = data;
+  const { code, input, args } = data;
 
   Perl.output = (content, channel) => {
     if (channel === 2) {
@@ -26,6 +26,7 @@ addEventListener('message', ({ data }) => {
     if (to === 'Ended') {
       postMessage({
         type: 'done',
+        exitCode: Perl.exitStatus ?? 0,
       });
     }
   });

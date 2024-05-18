@@ -1,5 +1,6 @@
 import {getRawProperty} from "../lib/getProperties";
 import {grantClipboardPermissions} from "../lib/grantClipboardPermissions";
+import { ElementHandle } from 'puppeteer';
 
 const baseUrl = process.env.BASE_URL ?? 'http://localhost:8000/';
 
@@ -9,16 +10,16 @@ describe('Code Sandbox', () => {
       await page.goto(baseUrl);
       await grantClipboardPermissions(page);
 
-      const codeInput = await page.$<HTMLTextAreaElement>('.code .CodeMirror textarea'),
-        byteCount = await page.$<HTMLSpanElement>('.byte-count'),
-        encoded = await page.$<HTMLSpanElement>('.encoded'),
-        markdown = await page.$<HTMLButtonElement>('button[name="markdown"]'),
-        languageSelector = await page.$<HTMLSelectElement>(
+      const codeInput = await page.$('.code .CodeMirror textarea') as ElementHandle<HTMLTextAreaElement>,
+        byteCount = await page.$('.byte-count') as ElementHandle<HTMLSpanElement>,
+        encoded = await page.$('.encoded') as ElementHandle<HTMLSpanElement>,
+        markdown = await page.$('button[name="markdown"]') as ElementHandle<HTMLButtonElement>,
+        languageSelector = await page.$(
           'select[name="lang"]'
-        );
+        ) as ElementHandle<HTMLSelectElement>;
 
       await languageSelector.select('webperl-5.28.1');
-      await expect(await getRawProperty(encoded, 'hidden')).toBe(true);
+      expect(await getRawProperty(encoded, 'hidden')).toBe(true);
       await page.evaluate((data) => navigator.clipboard.writeText(data), `00000000: 7072 696e 7422 4865 6c6c 6f2c 2057 6f72  print"Hello, Wor
 00000010: 6c64 2122                                ld!"`)
       await codeInput.focus();
@@ -26,9 +27,9 @@ describe('Code Sandbox', () => {
       await page.keyboard.down('v');
       await page.keyboard.up('v');
       await page.keyboard.up('Control');
-      await expect(await getRawProperty(byteCount, 'innerText')).toBe('20');
-      await expect(await getRawProperty(encoded, 'hidden')).toBe(false);
-      await expect(await getRawProperty(encoded, 'innerText')).toBe('(xxd)');
+      expect(await getRawProperty(byteCount, 'innerText')).toBe('20');
+      expect(await getRawProperty(encoded, 'hidden')).toBe(false);
+      expect(await getRawProperty(encoded, 'innerText')).toBe('(xxd)');
       await markdown.click();
       await expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/# \[Perl 5\.28\.1 \(webperl\)], 20 bytes\n\n<!-- language-all: lang-perl -->\n\n<pre><code>print"Hello, World!"<\/code><\/pre>\n\n\[Try it online!]\[TIO-\w+]\n\n\[Perl 5\.28\.1 \(webperl\)]: https:\/\/www\.perl\.org\/\n\[TIO-\w+]: https?:\/\/[a-z0-9.]+(:\d+)?\/#eyJsYW5nIjoid2VicGVybC01LjI4LjEiLCJjb2RlIjoiMDAwMDAwMDA6IDcwNzIgNjk2ZSA3NDIyIDQ4NjUgNmM2YyA2ZjJjIDIwNTcgNmY3MiAgcHJpbnRcIkhlbGxvLCBXb3JcbjAwMDAwMDEwOiA2YzY0IDIxMjIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGxkIVwiIn0=/)
     });

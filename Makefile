@@ -1,11 +1,11 @@
 SHELL = /bin/bash
 
 .PHONY: build
-build: docker-compose.override.yml
-	docker-compose run --rm web npm run build
+build: node_modules
+	npm run build
 
 .PHONY: test
-test: docker-compose.override.yml
+test: docker-compose.override.yml node_modules
 	docker-compose run --rm test npm run test
 
 docker-compose.override.yml:
@@ -17,3 +17,6 @@ docker-compose.override.yml:
 
 dist/js/app.js:
 dist/js/app.js: build
+
+node_modules:
+	npm install

@@ -140,8 +140,8 @@
       ></textarea>
     </div>
 
+    <h3 class="stdin-label">STDIN</h3>
     <div class="stdin">
-      <h3 class="stdin-label">STDIN</h3>
       <textarea
               name="input"
               placeholder="STDIN"
@@ -180,8 +180,9 @@
     <h3 class="stderr-header">STDERR</h3>
     <div class="stderr" aria-labelledby=".stderr-header"></div>
 
-    <footer>Copyright &copy; 2022 Dom Hastings</footer>
+    <footer>Copyright &copy; 2022-2024 Dom Hastings</footer>
 
-    <script src="dist/js/app.js"></script>
+    <script src="coi-serviceworker.js"></script>
+    <script src="dist/js/app.js" type="module" defer></script>
   </body>
 </html>

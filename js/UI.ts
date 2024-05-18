@@ -12,6 +12,7 @@ import TTY from './Renderers/TTY';
 import codePointsToString from './codePointsToString';
 import { decoders } from './Decoders';
 import { langs } from './Langs';
+import { options } from './Options';
 import replaceBinaryBytes from './replaceBinaryBytes';
 
 import 'codemirror/addon/comment/comment';
@@ -20,6 +21,14 @@ import 'codemirror/addon/display/placeholder';
 import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/edit/matchbrackets';
 import 'codemirror/keymap/sublime';
+
+type Message = {
+  name: 'setOption';
+  value: {
+    name: string;
+    value: unknown;
+  };
+};
 
 export type IHashData = {
   lang: string;
@@ -30,11 +39,12 @@ export type IHashData = {
   input?: string;
   type?: 'tty' | 'resource';
   mime?: string;
+  options?: { [key: string]: unknown };
 };
 
 export class UI {
   private addArg: HTMLHeadingElement;
-  private args: CodeMirror.Editor;
+  private args: Editor;
   private argsWrapper: HTMLDivElement;
   private bytesCount: HTMLSpanElement;
   private bytesPlural: HTMLSpanElement;
@@ -52,7 +62,7 @@ export class UI {
   private mimeTypeInput: HTMLInputElement;
   private runButton: HTMLButtonElement;
   private stderr: Renderers;
-  private stdin: CodeMirror.Editor;
+  private stdin: Editor;
   private stdout: Renderers;
   private stopButton: HTMLButtonElement;
 
@@ -111,13 +121,9 @@ export class UI {
     this.stdout.activate('text/plain');
 
     this.stderr = createDevice(
-      new TTY(document.querySelector('div.stderr') as HTMLDivElement, {
-        rows: 8,
-        theme: {
-          foreground: '#f92672',
-        },
-      })
+      new TTY(document.querySelector('div.stderr') as HTMLDivElement)
     );
+    this.stderr.setPrepend('\x1b[31m');
     this.stderr.activate('text/plain');
     this.stdin = UI.createEditor(
       document.querySelector('textarea[name="input"]') as HTMLTextAreaElement
@@ -126,17 +132,11 @@ export class UI {
       document.querySelector('textarea[name="args"]') as HTMLTextAreaElement
     );
 
-    this.io = new IO(
-      this.langSelector,
-      this.stdin,
-      this.stdout,
-      this.stderr,
-      this.args
-    );
+    this.io = new IO(this.stdin, this.args);
 
     this.expanders = document.querySelectorAll(
       'button[name="expand"]'
-    ) as NodeListOf<HTMLInputElement>;
+    ) as NodeListOf<HTMLButtonElement>;
     this.argsWrapper = document.querySelector(
       '.args-wrapper'
     ) as HTMLDivElement;
@@ -219,8 +219,21 @@ export class UI {
       }
     });
     addEventListener('resize', () => this.resize());
+    addEventListener(
+      'message',
+      ({ data: { name, value } }: { data: Message }) => {
+        if (name === 'setOption') {
+          options.set(value.name, value.value);
+        }
+      }
+    );
 
     // onload
+    const previousLang = window.localStorage.getItem('lastUsedLanguage');
+    if (previousLang) {
+      this.setLang(previousLang);
+    }
+
     this.parseHashData(location.hash);
     try {
       this.populateArgs();
@@ -332,17 +345,7 @@ export class UI {
   }
 
   private runCode(): void {
-    const started = Date.now(),
-      stopHandler = () => {
-        worker.terminate();
-
-        this.stderr.write(`Aborted execution after ${Date.now() - started}ms`);
-
-        this.runButton.removeAttribute('disabled');
-        this.stopButton.setAttribute('disabled', '');
-
-        this.stopButton.removeEventListener('click', stopHandler);
-      };
+    const started = Date.now();
 
     this.stdout.reset();
     this.stderr.reset();
@@ -350,7 +353,7 @@ export class UI {
     this.runButton.setAttribute('disabled', '');
     this.stopButton.removeAttribute('disabled');
 
-    const worker = langs.run(
+    langs.run(
       this.getLangId(),
       [].concat(
         [
@@ -361,42 +364,51 @@ export class UI {
       ),
       this.io.getArgs(),
       this.io.getStdin()
-    );
+    )
+      .then((runner) => {
+        const stopHandler = () => {
+          runner.terminate();
 
-    this.stopButton.addEventListener('click', stopHandler);
+          this.stderr.write(`Aborted execution after ${Date.now() - started}ms`);
 
-    worker.onmessage = ({ data }) => {
-      const { type, output, error } = data;
+          this.runButton.removeAttribute('disabled');
+          this.stopButton.setAttribute('disabled', '');
 
-      if (output) {
-        this.stdout.write(output);
-      }
+          this.stopButton.removeEventListener('click', stopHandler);
+        };
 
-      if (error) {
-        this.stderr.write(error ?? '');
-      }
+        this.stopButton.addEventListener('click', stopHandler);
 
-      if (type === 'done') {
-        this.stderr.write(
-          `Completed execution after ${Date.now() - started}ms`
+        runner.on('output', ({ output, error }) => {
+          this.stdout.write(output ?? '');
+          this.stderr.write(error ?? '');
+        });
+
+        runner.on('done', ({ exitCode }) => {
+          this.stderr.write(
+            `Execution finished with status code ${exitCode} after ${Date.now() - started}ms`
+          );
+
+          this.runButton.removeAttribute('disabled');
+          this.stopButton.setAttribute('disabled', '');
+
+          this.stopButton.removeEventListener('click', stopHandler);
+
+          // Make sure the process is stopped
+          runner.terminate();
+        });
+
+        runner.on('toast', ({ message, type = 'info' }) =>
+          this.toast(message, type)
         );
 
-        this.runButton.removeAttribute('disabled');
-        this.stopButton.setAttribute('disabled', '');
+        runner.on('error', (e) => {
+          this.toast(`Worker error: ${e.message}`, 'error');
 
-        this.stopButton.removeEventListener('click', stopHandler);
-
-        // Make sure the process is stopped
-        worker.terminate();
-      }
-    };
-
-    worker.onerror = (e) => {
-      this.toast(`Worker error: ${e.message}`, 'error');
-
-      this.runButton.removeAttribute('disabled');
-      this.stopButton.setAttribute('disabled', '');
-    };
+          this.runButton.removeAttribute('disabled');
+          this.stopButton.setAttribute('disabled', '');
+        });
+      });
   }
 
   private populateArgs(): void {
@@ -409,6 +421,8 @@ export class UI {
     if (!lang) {
       throw new TypeError('Unregistered lang: ' + this.getLangId());
     }
+
+    window.localStorage.setItem('lastUsedLanguage', lang.getId());
 
     const args = lang.getArgs();
 
@@ -552,6 +566,12 @@ export class UI {
       UI.expand(footerExpander);
     }
 
+    if (data.options) {
+      Object.entries(data.options).forEach(([key, value]) =>
+        options.set(key, value)
+      );
+    }
+
     this.setLang(data.lang ?? this.getLangId());
     this.codeHeader.write(decodeURIComponent(escape(data.header ?? '')));
     this.code.write(decodeURIComponent(escape(data.code ?? '')));
@@ -573,7 +593,8 @@ export class UI {
       footer = this.codeFooter.readAsString(null),
       args = this.io.getArgs(),
       input = this.io.getStdin(),
-      mime = this.mimeType;
+      mime = this.mimeType,
+      optionValues = options.options;
 
     Object.entries({
       header,
@@ -585,6 +606,10 @@ export class UI {
         data[key] = value;
       }
     });
+
+    if (JSON.stringify(optionValues) !== '{}') {
+      data.options = optionValues;
+    }
 
     if (mime !== 'text/plain') {
       data.mime = mime;

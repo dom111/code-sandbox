@@ -1,8 +1,8 @@
-import {Page} from "puppeteer";
+import { ElementHandle, Page } from 'puppeteer';
 import {getRawProperty} from "./getProperties";
 
 export const getCodemirrorText = async (page: Page, selector: string): Promise<string> => (await getRawProperty(
-  page.$<HTMLDivElement>(selector + ' .CodeMirror-code'),
+  page.$(selector + ' .CodeMirror-code') as Promise<ElementHandle<HTMLDivElement>>,
   'innerText'
 ) as string)
   .replace(/\u200b/g, '');

@@ -86,6 +86,9 @@ export class Code extends Abstract implements Input {
   public setType(type: string | null): void {
     if (this.editor.getOption('mode') !== type) {
       this.editor.setOption('mode', type);
+
+      // This triggers the code to be highlighted in the newly selected language
+      this.editor.setValue(this.editor.getValue());
     }
   }
 

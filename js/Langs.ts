@@ -1,4 +1,8 @@
-import Lang, { Runner } from './Lang';
+import Lang from './Lang';
+import WorkerRunner from './Runners/Worker';
+import Runner from './Runner';
+import Wasmer from './Runners/Wasmer';
+import { SpawnOptions } from '@wasmer/sdk/dist/pkg/wasmer_js';
 
 export class Langs {
   private data: { [key: string]: Lang } = {};
@@ -17,29 +21,34 @@ export class Langs {
     return Object.keys(this.data);
   }
 
-  public run(
+  public async run(
     langId: string,
     code: number[],
     args: string,
     input: string
-  ): Worker {
-    return this.data[langId].run(code, args, input);
+  ): Promise<Runner> {
+    return await this.data[langId].run(code, input, args);
   }
 }
 
-export const defaultRunner =
-  (workerURL): Runner =>
-  (code: number[], input: string, args: string) => {
-    const worker = new Worker(workerURL);
+export const workerRunner =
+  (workerURL: string | URL) =>
+  async (code: number[], input: string, args: string): Promise<Runner> => {
+    const runner = new WorkerRunner(workerURL);
 
-    worker.postMessage({
-      type: 'run',
-      code,
-      args,
-      input,
-    });
+    runner.init(code, input, args);
 
-    return worker;
+    return runner;
+  };
+
+export const wasmerRunner =
+  (packageName: string, filename: false | string = 'script', spawnOptions?: SpawnOptions) =>
+  async (code: number[], input: string, args: string): Promise<Runner> => {
+    const runner = new Wasmer(packageName, filename, spawnOptions);
+
+    runner.init(code, input, args);
+
+    return runner;
   };
 
 export const langs = new Langs();
